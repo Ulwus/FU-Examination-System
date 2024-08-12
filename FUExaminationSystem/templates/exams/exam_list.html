@@ -1,0 +1,30 @@
+{% extends 'base_generic.html' %}
+{% block title %}Exams{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Available Exams</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% if exams %}
+                    {% for exam in exams %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none">{{ exam.title }} ({{ exam.course.name }})</a>
+                            <div>
+                                {% if request.user.is_instructor %}
+                                    <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-primary btn-sm">Grade</a>
+                                {% elif request.user.is_student %}
+                                    <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-sm">Take Exam</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="list-group-item">No exams available.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

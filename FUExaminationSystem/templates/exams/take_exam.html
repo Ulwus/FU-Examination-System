@@ -1,0 +1,30 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Take Exam{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ exam.title }}</h2>
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            {% for question in exam.questions.all %}
+                <div class="form-group">
+                    <label>{{ question.text }}</label>
+                    {% if question.question_type.name == 'Multiple Choice' %}
+                        {% for answer in question.answers.all %}
+                            <div>
+                                <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}">
+                                {{ answer.text }}
+                            </div>
+                        {% endfor %}
+                    {% elif question.question_type.name == 'Text' %}
+                        <textarea name="text_answer_{{ question.id }}" rows="3"></textarea>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <input type="submit" value="Submit Exam" class="btn">
+        </form>
+    </div>
+</div>
+{% endblock %}

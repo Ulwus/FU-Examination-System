@@ -1,0 +1,39 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Register</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+        </div>
+        <div class="form-group">
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+        </div>
+        <div class="form-group">
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+        </div>
+        <div class="form-group">
+            {{ form.profile_picture.label_tag }}
+            {{ form.profile_picture }}
+        </div>
+        <div class="form-group">
+            {{ form.bio.label_tag }}
+            {{ form.bio }}
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Register" class="btn">
+        </div>
+    </form>
+</div>
+{% endblock %}

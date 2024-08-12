@@ -1,0 +1,27 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Grade Exam{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Grade Exam - {{ submission.exam.title }}</h2>
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            {% for answer in submission.student_answers.all %}
+                <div class="form-group">
+                    <p><strong>{{ answer.question.text }}</strong></p>
+                    {% if answer.answer %}
+                        <p>Selected Answer: {{ answer.answer.text }}</p>
+                    {% else %}
+                        <p>Answer: {{ answer.text_answer }}</p>
+                    {% endif %}
+                    <label for="marks_{{ answer.id }}">Marks Obtained:</label>
+                    <input type="number" name="marks_{{ answer.id }}" id="marks_{{ answer.id }}" value="{{ answer.marks_obtained }}">
+                </div>
+            {% endfor %}
+            <input type="submit" value="Submit Grades" class="btn">
+        </form>
+    </div>
+</div>
+{% endblock %}

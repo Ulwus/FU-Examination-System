@@ -1,0 +1,44 @@
+{% extends 'base_generic.html' %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Edit Profile</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" class="card-img-top rounded-circle" alt="Profile Picture">
+                    <div class="card-body text-center">
+                        <label for="profile_picture" class="btn btn-secondary">Change Picture</label>
+                        <input type="file" id="profile_picture" name="profile_picture" class="d-none">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Personal Information</h5>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            <textarea id="bio" name="bio" class="form-control" rows="4">{{ user.bio }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-custom">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

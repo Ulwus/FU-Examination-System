@@ -1,0 +1,70 @@
+{% extends 'base_generic.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-primary">Create Questions for Exam: {{ exam.title }}</h2>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <h3 class="mb-4 text-secondary">Questions</h3>
+    {{ question_formset.management_form }}
+    
+    {% for question_form in question_formset %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title">Question {{ forloop.counter }}</h4>
+        <div class="form-group mb-4">
+          {{ question_form.text.label_tag }}
+          {% render_field question_form.text class="form-control" %}
+        </div>
+        
+        <h5 class="mb-3">Answers for Question {{ forloop.counter }}</h5>
+        <div class="row">
+          {% for i in "1234" %}
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label class="form-label">Option {{ i }}</label>
+                <div class="input-group">
+                  <input type="text" name="answers_{{ forloop.parentloop.counter0 }}-form-{{ forloop.counter0 }}-text" class="form-control" required>
+                  <div class="input-group-append">
+                    <div class="input-group-text">
+                      <input type="checkbox" name="answers_{{ forloop.parentloop.counter0 }}-form-{{ forloop.counter0 }}-is_correct" class="form-check-input mt-0">
+                      <span class="ml-2">Correct</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary btn-lg btn-block mt-4 mb-5">Save Questions and Answers</button>
+  </form>
+</div>
+
+
+<script>
+// Example starter JavaScript for disabling form submissions if there are invalid fields
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.getElementsByClassName('needs-validation');
+    // Loop over them and prevent submission
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+{% endblock %}

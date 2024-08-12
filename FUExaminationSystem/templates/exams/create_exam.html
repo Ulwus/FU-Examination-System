@@ -1,0 +1,31 @@
+{% extends 'base_generic.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2 class="mb-4">Create Exam</h2>
+    <form method="post" class="needs-validation" novalidate>
+      {% csrf_token %}
+      
+      <div class="card shadow-sm">
+        <div class="card-body">
+          {% for field in form %}
+            <div class="mb-3">
+              {{ field.label_tag }}
+              {% render_field field class="form-control" %}
+              {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary btn-success">Create Exam</button>
+        </div>
+      </div>
+
+      
+      
+    </form>
+  </div>
+{% endblock %}
