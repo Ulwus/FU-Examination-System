@@ -4,6 +4,7 @@ from users.models import User
 
 
 class Exam(models.Model):
+    instructor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exams')
     title = models.CharField(max_length=255)
     description = models.TextField()
     start_time = models.DateTimeField()
@@ -28,7 +29,6 @@ class Question(models.Model):
     exam = models.ForeignKey(Exam, related_name='questions', on_delete=models.CASCADE)
     question_type = models.ForeignKey(QuestionType, on_delete=models.SET_NULL, null=True)
     text = models.TextField()
-    marks = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -39,6 +39,9 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
     text = models.TextField()
     is_correct = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'exams_answer'
 
     def __str__(self):
         return f"Answer for Question {self.question.id}"

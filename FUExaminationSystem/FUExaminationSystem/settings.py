@@ -13,14 +13,14 @@ DEBUG = True if os.getenv('DEBUG') == 'True' else False
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
+    'exams.apps.ExamsConfig',
     'widget_tweaks',
     'users',
-    'exams',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
+    'django.contrib.messages', 
     'django.contrib.staticfiles',
 ]
 

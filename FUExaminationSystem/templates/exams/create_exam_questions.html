@@ -1,15 +1,23 @@
 {% extends 'base_generic.html' %}
 {% load widget_tweaks %}
+{% load exam_extras %}
 
 {% block content %}
 <div class="container mt-5">
   <h2 class="mb-4 text-primary">Create Questions for Exam: {{ exam.title }}</h2>
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
   <form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
     
     <h3 class="mb-4 text-secondary">Questions</h3>
     {{ question_formset.management_form }}
-    
+
     {% for question_form in question_formset %}
     <div class="card mb-4 shadow-sm">
       <div class="card-body">
@@ -17,27 +25,34 @@
         <div class="form-group mb-4">
           {{ question_form.text.label_tag }}
           {% render_field question_form.text class="form-control" %}
+          {% for error in question_form.text.errors %}
+            <span class="text-danger">{{ error }}</span>
+          {% endfor %}
         </div>
-        
+
         <h5 class="mb-3">Answers for Question {{ forloop.counter }}</h5>
-        <div class="row">
-          {% for i in "1234" %}
-            <div class="col-md-6 mb-3">
-              <div class="form-group">
-                <label class="form-label">Option {{ i }}</label>
-                <div class="input-group">
-                  <input type="text" name="answers_{{ forloop.parentloop.counter0 }}-form-{{ forloop.counter0 }}-text" class="form-control" required>
-                  <div class="input-group-append">
-                    <div class="input-group-text">
-                      <input type="checkbox" name="answers_{{ forloop.parentloop.counter0 }}-form-{{ forloop.counter0 }}-is_correct" class="form-check-input mt-0">
-                      <span class="ml-2">Correct</span>
-                    </div>
+        {% with answer_formset=answer_formsets|get_item:forloop.counter0 %}
+          {{ answer_formset.management_form }}
+          {% for answer_form in answer_formset %}
+            <div class="form-group mb-3">
+              <div class="input-group">
+                {% render_field answer_form.text class="form-control" placeholder="Answer text" %}
+                <div class="input-group-append">
+                  <div class="input-group-text">
+                    {% render_field answer_form.is_correct class="form-check-input" %}
+                    <label class="form-check-label ml-2" for="{{ answer_form.is_correct.id_for_label }}">Correct</label>
                   </div>
                 </div>
               </div>
+              {% for error in answer_form.text.errors %}
+                <span class="text-danger">{{ error }}</span>
+              {% endfor %}
+              {% for error in answer_form.is_correct.errors %}
+                <span class="text-danger">{{ error }}</span>
+              {% endfor %}
             </div>
           {% endfor %}
-        </div>
+        {% endwith %}
       </div>
     </div>
     {% endfor %}
@@ -46,15 +61,11 @@
   </form>
 </div>
 
-
 <script>
-// Example starter JavaScript for disabling form submissions if there are invalid fields
 (function() {
   'use strict';
   window.addEventListener('load', function() {
-    // Fetch all the forms we want to apply custom Bootstrap validation styles to
     var forms = document.getElementsByClassName('needs-validation');
-    // Loop over them and prevent submission
     var validation = Array.prototype.filter.call(forms, function(form) {
       form.addEventListener('submit', function(event) {
         if (form.checkValidity() === false) {

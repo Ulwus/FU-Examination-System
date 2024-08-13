@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.forms import formset_factory
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -7,17 +8,13 @@ from .forms import ExamForm, QuestionForm, AnswerForm
 
 @login_required
 def exam_list(request):
-    
     if request.user.is_student:
-            exams = Exam.objects.filter(is_active=True)
+        exams = Exam.objects.filter(is_active=True, start_time__lte=timezone.now(), end_time__gte=timezone.now())
     elif request.user.is_instructor:
-            exams = Exam.objects.filter(instructor=request.user)
+        exams = Exam.objects.filter(instructor=request.user)
     else:
-            exams = Exam.objects.all()     
-        
-     
+        exams = Exam.objects.all()     
 
-    
     return render(request, 'exams/exam_list.html', {'exams': exams})
 
 @login_required
@@ -44,39 +41,63 @@ def create_exam(request):
 
     return render(request, 'exams/create_exam.html', {'form': form})
 
+
+
+
 @login_required
 def create_exam_questions(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
 
     QuestionFormSet = formset_factory(QuestionForm, extra=exam.total_marks)
-    
+    AnswerFormSet = formset_factory(AnswerForm, extra=4)
+
     if request.method == 'POST':
         question_formset = QuestionFormSet(request.POST, prefix='questions')
-        
-        if question_formset.is_valid():
-            questions = question_formset.save(commit=False)
-            for question in questions:
-                question.exam = exam
-                question.save()
-                
-                # Create Answer formset for each question
-                answer_formset = formset_factory(AnswerForm, extra=4)(request.POST, prefix=f'answers_{question.id}')
-                
-                if answer_formset.is_valid():
-                    answers = answer_formset.save(commit=False)
-                    for answer in answers:
-                        answer.question = question
-                        answer.save()
+        answer_formsets = [AnswerFormSet(request.POST, prefix=f'answers_{i}') for i in range(exam.total_marks)]
 
-            return redirect('exam_list')
+        if question_formset.is_valid() and all(formset.is_valid() for formset in answer_formsets):
+            try:
+                for index, question_form in enumerate(question_formset):
+                    if question_form.cleaned_data:
+                        question = question_form.save(commit=False)
+                        question.exam = exam
+                        question.save()
 
+                        answer_formset = answer_formsets[index]
+                        for answer_form in answer_formset:
+                            if answer_form.cleaned_data:
+                                answer = answer_form.save(commit=False)
+                                answer.question = question
+                                answer.save()
+
+                messages.success(request, 'Exam questions and answers saved successfully.')
+                return redirect('exam_list')
+            except Exception as e:
+                messages.error(request, f'An error occurred while saving: {str(e)}')
+        else:
+            for i, question_form in enumerate(question_formset):
+                for field, errors in question_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'Question {i+1} - {field}: {error}')
+                
+                answer_formset = answer_formsets[i]
+                for j, answer_form in enumerate(answer_formset):
+                    for field, errors in answer_form.errors.items():
+                        for error in errors:
+                            messages.error(request, f'Question {i+1}, Answer {j+1} - {field}: {error}')
+            
+            messages.error(request, 'There were errors in your form. Please check the error messages above and try again.')
     else:
         question_formset = QuestionFormSet(prefix='questions')
+        answer_formsets = [AnswerFormSet(prefix=f'answers_{i}') for i in range(exam.total_marks)]
 
     return render(request, 'exams/create_exam_questions.html', {
         'exam': exam,
         'question_formset': question_formset,
+        'answer_formsets': answer_formsets,
     })
+
+
 @login_required
 def take_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)

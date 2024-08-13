@@ -14,7 +14,7 @@
             <p><strong>Passing Marks:</strong> {{ exam.passing_marks }}</p>
         </div>
     </div>
-    {% if request.user.is_student and exam.is_active %}
+    {% if request.user.is_student and exam.is_exam_active %}
         <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-lg mt-4">Take Exam</a>
     {% endif %}
 </div>

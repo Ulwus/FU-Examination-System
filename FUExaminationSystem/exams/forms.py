@@ -11,31 +11,27 @@ class ExamForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 4}),
         }
 
-
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ['text']  # 'marks' ve 'question_type' kaldırıldı
+        fields = ['text']
 
 class AnswerForm(forms.ModelForm):
     class Meta:
         model = Answer
-        fields = ['text', 'is_correct']  # 'question' alanı formset ile kontrol edilecek
-
-    def __init__(self, *args, **kwargs):
-        self.question = kwargs.pop('question', None)
-        super().__init__(*args, **kwargs)
-        if self.question:
-            self.fields['is_correct'].required = False  # Doğru cevap işaretlenmesini zorunlu kılma
+        fields = ['text', 'is_correct']
+        widgets = {
+            'text': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_correct': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 class QuestionFormSet(forms.BaseFormSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.queryset = self.queryset.none()  # Formset'in queryset'ini yok sayarak formset'i dinamik yapacağız
+        self.queryset = self.queryset.none()
 
 class AnswerFormSet(forms.BaseFormSet):
     def __init__(self, *args, **kwargs):
         self.question = kwargs.pop('question', None)
         super().__init__(*args, **kwargs)
-        self.queryset = self.queryset.none()  # Formset'in queryset'ini yok sayarak formset'i dinamik yapacağız
-
+        self.queryset = self.queryset.none()

@@ -10,4 +10,4 @@ urlpatterns = [
     path('exam/<int:pk>/grade/', views.grade_exam, name='grade_exam'),
     path('exam/<int:pk>/create-questions/', views.create_exam_questions, name='create_exam_questions'),
 
-]
+]       
