@@ -3,25 +3,24 @@
 {% block title %}Grade Exam{% endblock %}
 
 {% block content %}
-<div class="container">
+
+
+<div class="container mt-5">
     <h2>Grade Exam - {{ submission.exam.title }}</h2>
-    <div class="card">
-        <form method="post">
-            {% csrf_token %}
-            {% for answer in submission.student_answers.all %}
-                <div class="form-group">
-                    <p><strong>{{ answer.question.text }}</strong></p>
-                    {% if answer.answer %}
-                        <p>Selected Answer: {{ answer.answer.text }}</p>
-                    {% else %}
-                        <p>Answer: {{ answer.text_answer }}</p>
-                    {% endif %}
-                    <label for="marks_{{ answer.id }}">Marks Obtained:</label>
-                    <input type="number" name="marks_{{ answer.id }}" id="marks_{{ answer.id }}" value="{{ answer.marks_obtained }}">
-                </div>
-            {% endfor %}
-            <input type="submit" value="Submit Grades" class="btn">
-        </form>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>Description:</strong> {{ submission.exam.description }}</p>
+            <p><strong>Start Time:</strong> {{ submission.exam.start_time }}</p>
+            <p><strong>End Time:</strong> {{ submission.exam.end_time }}</p>
+            <p><strong>Duration:</strong> {{ submission.exam.duration }} minutes</p>
+            <p><strong>Total Marks:</strong> {{ submission.exam.total_marks }}</p>
+            <p><strong>Passing Marks:</strong> {{ submission.exam.passing_marks }}</p>
+            <p><strong>Students Taken:</strong> {{ submission_count }}</p>
+        </div>
     </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" name="finish_exam" value="Finish Exam" class="btn btn-danger">
+    </form>
 </div>
 {% endblock %}

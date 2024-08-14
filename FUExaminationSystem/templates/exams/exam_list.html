@@ -1,29 +1,60 @@
 {% extends 'base_generic.html' %}
+
 {% block title %}Exams{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="mb-4">Available Exams</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                {% if exams %}
-                    {% for exam in exams %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none">{{ exam.title }} ({{ exam.course.name }})</a>
-                            <div>
-                                {% if request.user.is_instructor %}
-                                    <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-primary btn-sm">Grade</a>
-                                {% elif request.user.is_student %}
-                                    <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-sm">Take Exam</a>
-                                {% endif %}
-                            </div>
-                        </li>
-                    {% endfor %}
-                {% else %}
-                    <li class="list-group-item">No exams available.</li>
-                {% endif %}
-            </ul>
+    <h2 class="mb-4 text-success">Available Exams</h2>
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="bg-success text-white">
+                    <tr>
+                        <th scope="col">Sınav İsmi</th>
+                        <th scope="col">Sınav Açıklaması</th>
+                        <th scope="col">Sınav Süresi (DK)</th>
+                        <th scope="col">Başlangıç Tarihi</th>
+                        <th scope="col">Bitiş Tarihi</th>
+                        <th scope="col">Aktif Mi?</th>
+                        <th scope="col">İşlemi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if exams %}
+                        {% for exam in exams %}
+                            <tr>
+                                <td><a href="{% url 'exam_detail' exam.pk %}" class="text-decoration-none text-dark">{{ exam.title|truncatechars:20 }}</a></td>
+                                <td>{{ exam.description|truncatechars:20 }}</td>
+                                <td>{{ exam.duration }}</td>
+                                <td>{{ exam.start_time }}</td>
+                                <td>{{ exam.end_time }}</td>
+                                <td>
+                                    {% if exam.is_active %}
+                                        <span class="badge bg-success">Evet</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Hayır</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.user.is_instructor %}
+                                        <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-primary btn-sm">Grade</a>
+                                    {% elif request.user.is_student %}
+                                        {% if exam.id in completed_exams %}
+                                            <a href="{% url 'exam_result' exam.pk %}" class="btn btn-success btn-sm">View Result</a>
+                                        {% else %}
+                                            <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-sm">Take Exam</a>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No exams available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

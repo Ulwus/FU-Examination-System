@@ -31,7 +31,7 @@ class Question(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    marks = models.FloatField(default=1.0)
     def __str__(self):
         return f"{self.exam.title} - Question {self.id}"
 
@@ -51,7 +51,7 @@ class Submission(models.Model):
     user = models.ForeignKey(User, related_name='submissions', on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    score = models.FloatField(null=True, blank=True)
+    score = models.FloatField(default=0)
     is_graded = models.BooleanField(default=False)
 
     def __str__(self):

@@ -1,27 +1,34 @@
 {% extends 'base_generic.html' %}
+{% load widget_tweaks %}
 
 {% block title %}Exam Result{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>{{ submission.exam.title }} - Result</h2>
-    <div class="card">
-        <p><strong>Student:</strong> {{ submission.user.username }}</p>
-        <p><strong>Score:</strong> {{ submission.score }}</p>
-        <p><strong>Graded:</strong> {{ submission.is_graded }}</p>
-        <hr>
-        <h3>Answers</h3>
-        {% for answer in submission.student_answers.all %}
-            <div class="form-group">
-                <p><strong>{{ answer.question.text }}</strong></p>
-                {% if answer.answer %}
-                    <p>Selected Answer: {{ answer.answer.text }}</p>
-                {% else %}
-                    <p>Answer: {{ answer.text_answer }}</p>
-                {% endif %}
-                <p>Marks Obtained: {{ answer.marks_obtained }}</p>
-            </div>
-        {% endfor %}
+<div class="container py-5">
+    <h2 class="text-center custom-green-text">{{ submission.exam.title|truncatechars:30 }} - Result</h2>
+    <div class="card my-4">
+        <div class="card-header custom-green-border">
+            <h5 class="mb-0">Exam Result</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Student:</strong> {{ submission.user.username }}</p>
+            <p><strong>Score:</strong> {% if submission.is_graded %}{{ submission.score }} {% else %} Sonucu Görmek İçin Sınavın Bitmesini Bekleyin {% endif %}</p>
+            <p><strong>Graded:</strong> {{ submission.is_graded }}</p>
+            <hr>
+
+            <h3 class="custom-green-text">Answers</h3>
+            <hr>
+            {% for answer in submission.student_answers.all %}
+                <div class="form-group">
+                    <h5><strong>{{ answer.question.text }}</strong></h5>
+                    {% if answer.answer %}
+                        <p>Selected Answer: {{ answer.answer.text }}</p>
+                    {% else %}
+                        <p>Answer: {{ answer.text_answer }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

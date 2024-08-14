@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib import messages
 from django.forms import formset_factory
 from django.shortcuts import render, get_object_or_404, redirect
@@ -9,14 +10,19 @@ from .forms import ExamForm, QuestionForm, AnswerForm
 @login_required
 def exam_list(request):
     if request.user.is_student:
-        exams = Exam.objects.filter(is_active=True, start_time__lte=timezone.now(), end_time__gte=timezone.now())
+        
+        exams = Exam.objects.all().order_by('-is_active', '-start_time')
+        completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
     elif request.user.is_instructor:
         exams = Exam.objects.filter(instructor=request.user)
     else:
-        exams = Exam.objects.all()     
+        exams = Exam.objects.all()
 
-    return render(request, 'exams/exam_list.html', {'exams': exams})
-
+    context = {
+        'exams': exams,
+        'completed_exams': completed_exams if request.user.is_student else None
+    }
+    return render(request, 'exams/exam_list.html', context)
 @login_required
 def exam_detail(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
@@ -98,11 +104,19 @@ def create_exam_questions(request, pk):
     })
 
 
+from django.db.models import Sum
+
 @login_required
 def take_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
+    completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
+
+    if exam.id in completed_exams:
+        return redirect('exam_list')
+
     if not request.user.is_student or not exam.is_active:
         return redirect('exam_list')
+    
 
     submission, created = Submission.objects.get_or_create(
         exam=exam,
@@ -110,29 +124,37 @@ def take_exam(request, pk):
         defaults={'start_time': timezone.now()}
     )
 
+    questions = exam.questions.all().prefetch_related('answers')
+    total_questions = questions.count()
+
     if request.method == 'POST':
-        for question in exam.questions.all():
+        correct_answers = 0
+        for question in questions:
             answer_id = request.POST.get(f'question_{question.id}')
-            text_answer = request.POST.get(f'text_answer_{question.id}')
             if answer_id:
                 answer = get_object_or_404(Answer, id=answer_id)
-                StudentAnswer.objects.update_or_create(
+                student_answer, created = StudentAnswer.objects.update_or_create(
                     submission=submission,
                     question=question,
                     defaults={'answer': answer}
                 )
-            elif text_answer:
-                StudentAnswer.objects.update_or_create(
-                    submission=submission,
-                    question=question,
-                    defaults={'text_answer': text_answer}
-                )
+                
+                if answer.is_correct:
+                    correct_answers += 1
 
+        score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        submission.score = round(score, 2)  
         submission.end_time = timezone.now()
         submission.save()
+        
         return redirect('exam_result', pk=submission.pk)
 
-    return render(request, 'exams/take_exam.html', {'exam': exam, 'submission': submission})
+    return render(request, 'exams/take_exam.html', {
+        'exam': exam,
+        'submission': submission,
+        'questions': questions
+    })
 
 @login_required
 def exam_result(request, pk):
@@ -144,20 +166,27 @@ def exam_result(request, pk):
 @login_required
 def grade_exam(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    if not request.user.is_instructor or submission.exam.course.instructor != request.user:
+    exam = submission.exam
+    submission_count = Submission.objects.filter(exam=exam).count()
+    
+
+    if not request.user.is_instructor or submission.exam.instructor != request.user:
         return redirect('exam_list')
     
     if request.method == 'POST':
-        total_score = 0
-        for answer in submission.student_answers.all():
-            marks = float(request.POST.get(f'marks_{answer.id}', 0))
-            answer.marks_obtained = marks
-            answer.save()
-            total_score += marks
+        if 'finish_exam' in request.POST:
+            exam = submission.exam
+            exam.is_active = False
+            exam.save()
+            
+            submissions = Submission.objects.filter(exam=exam)
+            for sub in submissions:
+                sub.is_graded = True
+                sub.save()
+                
+            messages.success(request, 'Exam has been marked as complete.')
+            return redirect('exam_list')
+
         
-        submission.score = total_score
-        submission.is_graded = True
-        submission.save()
-        return redirect('exam_result', pk=submission.pk)
     
-    return render(request, 'exams/grade_exam.html', {'submission': submission})
+    return render(request, 'exams/grade_exam.html', {'submission': submission, 'submission_count': submission_count})
