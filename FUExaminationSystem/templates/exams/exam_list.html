@@ -41,6 +41,8 @@
                                     {% elif request.user.is_student %}
                                         {% if exam.id in completed_exams %}
                                             <a href="{% url 'exam_result' exam.pk %}" class="btn btn-success btn-sm">View Result</a>
+                                        {% elif exam.id in active_submissions %}
+                                            <a href="{% url 'take_exam' exam.pk %}" class="btn btn-warning btn-sm">Continue Exam</a>
                                         {% else %}
                                             <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-sm">Take Exam</a>
                                         {% endif %}

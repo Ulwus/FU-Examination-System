@@ -1,6 +1,8 @@
 from datetime import datetime
+import json
 from django.contrib import messages
 from django.forms import formset_factory
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -12,14 +14,19 @@ def exam_list(request):
     if request.user.is_student:
         
         exams = Exam.objects.all().order_by('-is_active', '-start_time')
-        completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
+        completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False, is_submitted=True).values_list('exam_id', flat=True)
+        active_submissions = Submission.objects.filter(is_submitted=False, end_time=None).values_list('exam_id')
+
     elif request.user.is_instructor:
         exams = Exam.objects.filter(instructor=request.user)
+        active_submissions = None
     else:
         exams = Exam.objects.all()
+        active_submissions = None
 
     context = {
         'exams': exams,
+        'active_submissions': active_submissions,
         'completed_exams': completed_exams if request.user.is_student else None
     }
     return render(request, 'exams/exam_list.html', context)
@@ -112,11 +119,11 @@ def take_exam(request, pk):
     completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
 
     if exam.id in completed_exams:
-        return redirect('exam_list')
+        submission = Submission.objects.get(exam=exam, user=request.user)
+        return redirect('exam_result', pk=submission.pk)
 
     if not request.user.is_student or not exam.is_active:
         return redirect('exam_list')
-    
 
     submission, created = Submission.objects.get_or_create(
         exam=exam,
@@ -128,33 +135,73 @@ def take_exam(request, pk):
     total_questions = questions.count()
 
     if request.method == 'POST':
-        correct_answers = 0
-        for question in questions:
-            answer_id = request.POST.get(f'question_{question.id}')
-            if answer_id:
-                answer = get_object_or_404(Answer, id=answer_id)
-                student_answer, created = StudentAnswer.objects.update_or_create(
-                    submission=submission,
-                    question=question,
-                    defaults={'answer': answer}
-                )
-                
-                if answer.is_correct:
-                    correct_answers += 1
+        if submission.is_submitted:
+            return JsonResponse({'status': 'already_submitted'}, status=400)
 
-        score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
-        
-        submission.score = round(score, 2)  
-        submission.end_time = timezone.now()
-        submission.save()
-        
-        return redirect('exam_result', pk=submission.pk)
+        if timezone.now() > submission.start_time + timezone.timedelta(minutes=exam.duration):
+            if not submission.is_submitted:
+                submission.end_time = timezone.now()
+                submission.is_submitted = True
+                submission.save()
+            return redirect('exam_result', pk=submission.pk)
+
+        if 'save_answers' in request.POST:
+            for question in questions:
+                answer_id = request.POST.get(f'question_{question.id}')
+                if answer_id:
+                    existing_answers = StudentAnswer.objects.filter(submission=submission, question=question)
+                    
+                    if existing_answers.exists():
+                        existing_answer = existing_answers.first()
+                        existing_answers.exclude(pk=existing_answer.pk).delete()
+                        existing_answer.answer = get_object_or_404(Answer, id=answer_id)
+                        existing_answer.save()
+                    else:
+                        StudentAnswer.objects.create(
+                            submission=submission,
+                            question=question,
+                            answer=get_object_or_404(Answer, id=answer_id)
+                        )
+            return JsonResponse({'status': 'success'})
+        else:
+            if not submission.is_submitted:
+                correct_answers = 0
+                for question in questions:
+                    answer_id = request.POST.get(f'question_{question.id}')
+                    if answer_id:
+                        student_answer, created = StudentAnswer.objects.update_or_create(
+                            submission=submission,
+                            question=question,
+                            defaults={'answer': get_object_or_404(Answer, id=answer_id)}
+                        )
+                        if student_answer.answer.is_correct:
+                            correct_answers += 1
+                    else:
+                        messages.error(request, f'Soru {question.id} için bir cevap seçmediniz.')
+                        return redirect('exam_detail', pk=exam.pk)
+
+                score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+                submission.score = round(score, 2)
+                submission.end_time = timezone.now()
+                submission.is_submitted = True
+                submission.save()
+
+            return redirect('exam_result', pk=submission.pk)
+
+    answered_questions = StudentAnswer.objects.filter(submission=submission).values_list('question_id', 'answer_id')
+    answered_dict = dict(answered_questions)
 
     return render(request, 'exams/take_exam.html', {
         'exam': exam,
         'submission': submission,
-        'questions': questions
+        'questions': questions,
+        'answered_dict': json.dumps(answered_dict)
     })
+
+
+
+
+
 
 @login_required
 def exam_result(request, pk):

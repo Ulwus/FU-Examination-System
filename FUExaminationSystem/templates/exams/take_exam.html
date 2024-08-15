@@ -1,65 +1,116 @@
 {% extends 'base_generic.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Take Exam: {{ exam.title }}{% endblock %}
-
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4 text-primary">Take Exam: {{ exam.title }}</h2>
-  
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-
-  <form method="post" class="needs-validation" novalidate>
-    {% csrf_token %}
-    
-    {% for question in questions %}
-    <div class="card mb-4 shadow-sm">
-      <div class="card-body">
-        <h4 class="card-title">Question {{ forloop.counter }}</h4>
-        <div class="form-group mb-4">
-          <label>{{ question.text }}</label>
-        </div>
-
-        <h5 class="mb-3">Answers for Question {{ forloop.counter }}</h5>
-        {% for answer in question.answers.all %}
-          <div class="form-group mb-3">
-            <div class="input-group">
-              <div class="input-group-prepend">
-                <div class="input-group-text">
-                  <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" id="answer_{{ answer.id }}" required>
+    <h2 class="text-success mb-4">{{ exam.title }}</h2>
+    <div id="timer" class="mb-4"></div>
+    <form id="exam-form" method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% for question in questions %}
+        <div class="card mb-4 shadow-sm border-success rounded">
+            <div class="card-body">
+                <h4 class="card-title">Question {{ forloop.counter }}</h4>
+                <div class="form-group mb-4">
+                    <label class="text-success"><strong>{{ question.text }}</strong></label>
                 </div>
-              </div>
-              <label class="form-control" for="answer_{{ answer.id }}">{{ answer.text }}</label>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
 
-    <button type="submit" class="btn btn-primary btn-lg btn-block mt-4 mb-5">Submit Exam</button>
-  </form>
+                <h5 class="mb-3 text-success">Answers for Question {{ forloop.counter }}</h5>
+                {% for answer in question.answers.all %}
+                <div class="form-group mb-3">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" id="answer_{{ answer.id }}" required>
+                            </div>
+                        </div>
+                        <label class="form-check-label form-control" for="answer_{{ answer.id }}">{{ answer.text }}</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success btn-lg btn-block mt-4 mb-5">Submit Exam</button>
+    </form>
 </div>
 
 <script>
-(function() {
-  'use strict';
-  window.addEventListener('load', function() {
-    var forms = document.getElementsByClassName('needs-validation');
-    var validation = Array.prototype.filter.call(forms, function(form) {
-      form.addEventListener('submit', function(event) {
-        if (form.checkValidity() === false) {
-          event.preventDefault();
-          event.stopPropagation();
+    const examDuration = {{ exam.duration }} * 60; 
+    const startTime = new Date('{{ submission.start_time|date:"c" }}').getTime();
+    const endTime = startTime + (examDuration * 1000);
+    const answeredDict = JSON.parse('{{ answered_dict|safe }}');
+    let formSubmitted = false;
+
+    function submitExam() {
+        const form = document.getElementById("exam-form");
+
+        if (!formSubmitted) {
+            formSubmitted = true;
+            form.submit();
         }
-        form.classList.add('was-validated');
-      }, false);
+    }
+
+    function updateTimer() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("timer").innerHTML = `Time remaining: ${hours}h ${minutes}m ${seconds}s`;
+
+        if (distance < 0) {
+            clearInterval(timerInterval);
+            document.getElementById("timer").innerHTML = "EXPIRED";
+            submitExam();
+        }
+    }
+
+    function saveAnswers() {
+        const form = document.getElementById("exam-form");
+        const formData = new FormData(form);
+        formData.append('save_answers', 'true');
+    
+        fetch('', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.status === 'success') {
+                  console.log('Answers saved successfully');
+              } else if (data.status === 'error') {
+                  console.error('Error saving answers');
+              }
+          }).catch(error => {
+              console.error('Fetch error: ', error);
+          });
+    }
+
+    for (const [questionId, answerId] of Object.entries(answeredDict)) {
+        const radio = document.querySelector(`input[name="question_${questionId}"][value="${answerId}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+    }
+
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    setInterval(saveAnswers, 1000);
+
+    window.addEventListener('beforeunload', saveAnswers);
+
+    document.getElementById("exam-form").addEventListener('submit', function(e) {
+        const submitButton = document.querySelector('button[type="submit"]');
+        submitButton.disabled = true; 
+        submitExam();
     });
-  }, false);
-})();
 </script>
+
 {% endblock %}

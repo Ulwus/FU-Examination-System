@@ -1,4 +1,6 @@
+from datetime import timedelta
 from django.db import models
+from django.utils import timezone
 from users.models import User
 
 
@@ -50,12 +52,16 @@ class Submission(models.Model):
     exam = models.ForeignKey(Exam, related_name='submissions', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='submissions', on_delete=models.CASCADE)
     start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    end_time = models.DateTimeField(null=True, blank=True)
     score = models.FloatField(default=0)
     is_graded = models.BooleanField(default=False)
+    is_submitted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} - {self.exam.title}"
+
+    def is_time_up(self):
+        return timezone.now() > self.start_time + timedelta(minutes=self.exam.duration)
 
 class StudentAnswer(models.Model):
     submission = models.ForeignKey(Submission, related_name='student_answers', on_delete=models.CASCADE)
