@@ -6,17 +6,17 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import Answer, Exam, Submission, StudentAnswer
+from .models import Answer, Exam, Submission, StudentAnswer, TempSubmission, Question
 from .forms import ExamForm, QuestionForm, AnswerForm
+from django.core.exceptions import ObjectDoesNotExist
+import logging
 
 @login_required
 def exam_list(request):
     if request.user.is_student:
-        
         exams = Exam.objects.all().order_by('-is_active', '-start_time')
         completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False, is_submitted=True).values_list('exam_id', flat=True)
         active_submissions = Submission.objects.filter(is_submitted=False, end_time=None).values_list('exam_id')
-
     elif request.user.is_instructor:
         exams = Exam.objects.filter(instructor=request.user)
         active_submissions = None
@@ -30,6 +30,7 @@ def exam_list(request):
         'completed_exams': completed_exams if request.user.is_student else None
     }
     return render(request, 'exams/exam_list.html', context)
+
 @login_required
 def exam_detail(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
@@ -53,9 +54,6 @@ def create_exam(request):
         form = ExamForm()
 
     return render(request, 'exams/create_exam.html', {'form': form})
-
-
-
 
 @login_required
 def create_exam_questions(request, pk):
@@ -111,7 +109,8 @@ def create_exam_questions(request, pk):
     })
 
 
-from django.db.models import Sum
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def take_exam(request, pk):
@@ -138,47 +137,43 @@ def take_exam(request, pk):
         if submission.is_submitted:
             return JsonResponse({'status': 'already_submitted'}, status=400)
 
-        if timezone.now() > submission.start_time + timezone.timedelta(minutes=exam.duration):
-            if not submission.is_submitted:
-                submission.end_time = timezone.now()
-                submission.is_submitted = True
-                submission.save()
-            return redirect('exam_result', pk=submission.pk)
+        if 'save_temp_answers' in request.POST:
+            try:
+                temp_answers = json.loads(request.POST.get('temp_answers', '{}'))
 
-        if 'save_answers' in request.POST:
-            for question in questions:
-                answer_id = request.POST.get(f'question_{question.id}')
-                if answer_id:
-                    existing_answers = StudentAnswer.objects.filter(submission=submission, question=question)
-                    
-                    if existing_answers.exists():
-                        existing_answer = existing_answers.first()
-                        existing_answers.exclude(pk=existing_answer.pk).delete()
-                        existing_answer.answer = get_object_or_404(Answer, id=answer_id)
-                        existing_answer.save()
-                    else:
-                        StudentAnswer.objects.create(
-                            submission=submission,
-                            question=question,
-                            answer=get_object_or_404(Answer, id=answer_id)
-                        )
-            return JsonResponse({'status': 'success'})
-        else:
-            if not submission.is_submitted:
+                TempSubmission.objects.filter(submission=submission).delete()
+
+                temp_submission = TempSubmission(submission=submission, temp_answers=temp_answers)
+                temp_submission.save()
+
+                return JsonResponse({'status': 'success'})
+            except json.JSONDecodeError as e:
+                return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
+            except ObjectDoesNotExist as e:
+                return JsonResponse({'status': 'error', 'message': 'Submission not found.'}, status=404)
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
+
+        if timezone.now() > submission.start_time + timezone.timedelta(minutes=exam.duration) or 'finish_exam' in request.POST:
+            temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
+            if temp_submission:
                 correct_answers = 0
-                for question in questions:
-                    answer_id = request.POST.get(f'question_{question.id}')
-                    if answer_id:
+                for question_id, answer_id in temp_submission.temp_answers.items():
+                    try:
+                        question = get_object_or_404(Question, id=question_id)
+                        answer = get_object_or_404(Answer, id=answer_id)
                         student_answer, created = StudentAnswer.objects.update_or_create(
                             submission=submission,
                             question=question,
-                            defaults={'answer': get_object_or_404(Answer, id=answer_id)}
+                            defaults={'answer': answer}
                         )
                         if student_answer.answer.is_correct:
                             correct_answers += 1
-                    else:
-                        messages.error(request, f'Soru {question.id} için bir cevap seçmediniz.')
-                        return redirect('exam_detail', pk=exam.pk)
+                    except ObjectDoesNotExist as e:
+                        return JsonResponse({'status': 'error', 'message': 'Question or Answer not found.'}, status=404)
+
+                if temp_submission.id:
+                    temp_submission.delete()
 
                 score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
                 submission.score = round(score, 2)
@@ -188,8 +183,8 @@ def take_exam(request, pk):
 
             return redirect('exam_result', pk=submission.pk)
 
-    answered_questions = StudentAnswer.objects.filter(submission=submission).values_list('question_id', 'answer_id')
-    answered_dict = dict(answered_questions)
+    temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
+    answered_dict = temp_submission.temp_answers if temp_submission else {}
 
     return render(request, 'exams/take_exam.html', {
         'exam': exam,
@@ -197,11 +192,6 @@ def take_exam(request, pk):
         'questions': questions,
         'answered_dict': json.dumps(answered_dict)
     })
-
-
-
-
-
 
 @login_required
 def exam_result(request, pk):
@@ -215,25 +205,22 @@ def grade_exam(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     exam = submission.exam
     submission_count = Submission.objects.filter(exam=exam).count()
-    
 
     if not request.user.is_instructor or submission.exam.instructor != request.user:
         return redirect('exam_list')
-    
+
     if request.method == 'POST':
         if 'finish_exam' in request.POST:
             exam = submission.exam
             exam.is_active = False
             exam.save()
-            
+
             submissions = Submission.objects.filter(exam=exam)
             for sub in submissions:
                 sub.is_graded = True
                 sub.save()
-                
+
             messages.success(request, 'Exam has been marked as complete.')
             return redirect('exam_list')
 
-        
-    
     return render(request, 'exams/grade_exam.html', {'submission': submission, 'submission_count': submission_count})

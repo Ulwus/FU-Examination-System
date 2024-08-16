@@ -20,6 +20,8 @@ class Exam(models.Model):
 
     def __str__(self):
         return f"{self.course.code} - {self.title}"
+    
+
 
 class QuestionType(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -72,3 +74,12 @@ class StudentAnswer(models.Model):
 
     def __str__(self):
         return f"Answer by {self.submission.user.username} for Question {self.question.id}"
+    
+class TempSubmission(models.Model):
+    submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='temp_submission')
+    temp_answers = models.JSONField(default=dict)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Temp Submission for {self.submission}"
+

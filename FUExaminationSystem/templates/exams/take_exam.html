@@ -42,12 +42,57 @@
     const endTime = startTime + (examDuration * 1000);
     const answeredDict = JSON.parse('{{ answered_dict|safe }}');
     let formSubmitted = false;
+    let tempAnswers = JSON.parse('{{ answered_dict|safe }}');
+    let hasChanges = false;
+
+        function updateTempAnswers(questionId, answerId) {
+        tempAnswers[questionId] = answerId;
+        hasChanges = true;
+        saveTempAnswers();
+    }
+
+    function saveTempAnswers() {
+        if (!hasChanges) {
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append('save_temp_answers', 'true');
+        formData.append('temp_answers', JSON.stringify(tempAnswers));
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+        fetch('', {
+            method: 'POST',
+            body: formData,
+        }).then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'An unknown error occurred');
+                });
+            }
+            return response.json();
+        }).then(data => {
+            if (data.status === 'success') {
+                console.log('Temp answers saved successfully');
+                hasChanges = false;
+            } else {
+                console.error('Error saving temp answers:', data.message);
+            }
+        }).catch(error => {
+            console.error('Fetch error: ', error);
+        });
+    }
 
     function submitExam() {
-        const form = document.getElementById("exam-form");
-
         if (!formSubmitted) {
             formSubmitted = true;
+            saveTempAnswers();
+            const form = document.getElementById("exam-form");
+            const finishExamInput = document.createElement('input');
+            finishExamInput.type = 'hidden';
+            finishExamInput.name = 'finish_exam';
+            finishExamInput.value = 'true';
+            form.appendChild(finishExamInput);
             form.submit();
         }
     }
@@ -69,48 +114,28 @@
         }
     }
 
-    function saveAnswers() {
-        const form = document.getElementById("exam-form");
-        const formData = new FormData(form);
-        formData.append('save_answers', 'true');
-    
-        fetch('', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        }).then(response => response.json())
-          .then(data => {
-              if (data.status === 'success') {
-                  console.log('Answers saved successfully');
-              } else if (data.status === 'error') {
-                  console.error('Error saving answers');
-              }
-          }).catch(error => {
-              console.error('Fetch error: ', error);
-          });
-    }
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateTempAnswers(this.name.split('_')[1], this.value);
+        });
+    });
 
-    for (const [questionId, answerId] of Object.entries(answeredDict)) {
+    for (const [questionId, answerId] of Object.entries(tempAnswers)) {
         const radio = document.querySelector(`input[name="question_${questionId}"][value="${answerId}"]`);
         if (radio) {
             radio.checked = true;
         }
     }
 
-    updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
 
-    setInterval(saveAnswers, 1000);
-
-    window.addEventListener('beforeunload', saveAnswers);
 
     document.getElementById("exam-form").addEventListener('submit', function(e) {
-        const submitButton = document.querySelector('button[type="submit"]');
-        submitButton.disabled = true; 
+        e.preventDefault();
         submitExam();
     });
+
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
 </script>
 
 {% endblock %}
