@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: gunicorn FUExaminationSystem.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=FUExaminationSystem.settings
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A FUExaminationSystem worker --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+      - mongo
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+  celery-beat:
+    build: .
+    command: celery -A FUExaminationSystem beat --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+      - mongo
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+volumes:
+  mongo_data:

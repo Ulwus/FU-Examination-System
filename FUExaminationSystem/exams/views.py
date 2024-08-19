@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from django.contrib import messages
 from django.forms import formset_factory
@@ -10,11 +10,14 @@ from .models import Answer, Exam, Submission, StudentAnswer, TempSubmission, Que
 from .forms import ExamForm, QuestionForm, AnswerForm
 from django.core.exceptions import ObjectDoesNotExist
 import logging
+from .tasks import finish_exam_task
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def exam_list(request):
     if request.user.is_student:
-        exams = Exam.objects.all().order_by('-is_active', '-start_time')
+        exams = Exam.objects.all().order_by('-is_active', '-end_time')
         completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False, is_submitted=True).values_list('exam_id', flat=True)
         active_submissions = Submission.objects.filter(is_submitted=False, end_time=None).values_list('exam_id')
     elif request.user.is_instructor:
@@ -108,10 +111,6 @@ def create_exam_questions(request, pk):
         'answer_formsets': answer_formsets,
     })
 
-
-
-logger = logging.getLogger(__name__)
-
 @login_required
 def take_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
@@ -129,6 +128,10 @@ def take_exam(request, pk):
         user=request.user,
         defaults={'start_time': timezone.now()}
     )
+
+    if created:
+        finish_time = timezone.now() + timedelta(minutes=exam.duration)
+        finish_exam_task.apply_async((submission.id,), eta=finish_time)
 
     questions = exam.questions.all().prefetch_related('answers')
     total_questions = questions.count()
@@ -155,32 +158,7 @@ def take_exam(request, pk):
                 return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
 
         if timezone.now() > submission.start_time + timezone.timedelta(minutes=exam.duration) or 'finish_exam' in request.POST:
-            temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
-            if temp_submission:
-                correct_answers = 0
-                for question_id, answer_id in temp_submission.temp_answers.items():
-                    try:
-                        question = get_object_or_404(Question, id=question_id)
-                        answer = get_object_or_404(Answer, id=answer_id)
-                        student_answer, created = StudentAnswer.objects.update_or_create(
-                            submission=submission,
-                            question=question,
-                            defaults={'answer': answer}
-                        )
-                        if student_answer.answer.is_correct:
-                            correct_answers += 1
-                    except ObjectDoesNotExist as e:
-                        return JsonResponse({'status': 'error', 'message': 'Question or Answer not found.'}, status=404)
-
-                if temp_submission.id:
-                    temp_submission.delete()
-
-                score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
-                submission.score = round(score, 2)
-                submission.end_time = timezone.now()
-                submission.is_submitted = True
-                submission.save()
-
+            finish_exam_task.delay(submission.id)
             return redirect('exam_result', pk=submission.pk)
 
     temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
