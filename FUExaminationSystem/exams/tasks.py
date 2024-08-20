@@ -1,6 +1,10 @@
+from datetime import datetime
 from celery import shared_task
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+import pytz
+
+from users.models import User
 from .models import Submission, Exam, TempSubmission, Question, Answer, StudentAnswer
 import logging
 
@@ -49,7 +53,6 @@ def finish_exam_task(submission_id):
         logger.warning(f"No temp submission found for submission {submission_id}")
 
 
-
 def process_submission(submission):
     temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
     
@@ -85,13 +88,40 @@ def process_submission(submission):
 
     logger.info(f"Exam finished for submission {submission.id}")
 
+
+
 @shared_task
 def check_and_finish_exams():
-    current_time = timezone.now()
-    active_exams = Exam.objects.filter(is_active=True, end_time__lte=current_time)
-    
-    for exam in active_exams:
-        finish_exam_task.delay(exam_id=exam.id)
-        exam.is_active = False
-        exam.save()
-        logger.info(f"Deactivated exam {exam.id}")
+    try:
+        current_time_utc = timezone.now()
+        logger.info(f"Current time in UTC: {current_time_utc.isoformat()}")
+
+        active_exams = Exam.objects.all()
+
+        for exam in active_exams:
+            if (exam.end_time < current_time_utc and exam.is_active==True):
+                exam.is_active = False
+                exam.save()
+
+                students = User.objects.all()
+                for student in students:
+                    if student.is_student:
+                        Submission.objects.create(exam=exam, user=student, start_time=timezone.now())
+                logger.info(f"Deactivated exam {exam.id}")
+
+                submissions = Submission.objects.all()
+
+                for submission in submissions:
+                    if submission.exam_id == exam.id and not submission.is_submitted:
+                        logger.info(f"Finished exam for submission {submission.id}")
+                        finish_exam_task(submission.id)
+
+                        submission.is_graded=True
+                        submission.is_submitted=True
+                        submission.end_time = timezone.now()
+
+                        submission.save()
+
+        logger.info("Completed check for exams that need to be finished.")
+    except Exception as e:
+        logger.error(f"Error in check_and_finish_exams task: {str(e)}")
