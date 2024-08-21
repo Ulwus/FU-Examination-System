@@ -48,4 +48,21 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                alert('Please fill in all required fields before registering.');
+            }
+            form.classList.add('was-validated');
+        }, false);
+
+    });
+
+    </script>
 {% endblock %}

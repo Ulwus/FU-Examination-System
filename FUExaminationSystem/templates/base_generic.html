@@ -139,7 +139,7 @@
         }
     </style>
 </head>
-<body>
+<body style="z-index:999">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container">
@@ -180,7 +180,7 @@
     {% endfor %}
   </div>
 {% endif %}
-    <main class="containerMain">
+    <main class="containerMain" style="z-index:1">
         {% block content %}
         {% endblock %}
     </main>

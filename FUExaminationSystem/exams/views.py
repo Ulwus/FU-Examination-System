@@ -84,6 +84,8 @@ def create_exam_questions(request, pk):
                                 answer.question = question
                                 answer.save()
 
+                exam.is_active = True
+                exam.save()
                 messages.success(request, 'Exam questions and answers saved successfully.')
                 return redirect('exam_list')
             except Exception as e:

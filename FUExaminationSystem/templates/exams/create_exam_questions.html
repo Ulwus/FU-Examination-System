@@ -35,7 +35,7 @@
           {{ answer_formset.management_form }}
           {% for answer_form in answer_formset %}
             <div class="form-group mb-3">
-              <div class="input-group">
+              <div class="input-group" style="z-index:0">
                 {% render_field answer_form.text class="form-control" placeholder="Answer text" %}
                 <div class="input-group-append">
                   <div class="input-group-text">
@@ -62,20 +62,50 @@
 </div>
 
 <script>
-(function() {
-  'use strict';
-  window.addEventListener('load', function() {
-    var forms = document.getElementsByClassName('needs-validation');
-    var validation = Array.prototype.filter.call(forms, function(form) {
-      form.addEventListener('submit', function(event) {
-        if (form.checkValidity() === false) {
-          event.preventDefault();
-          event.stopPropagation();
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    function updateInputClasses() {
+      const textInputs = form.querySelectorAll('input[type="text"], textarea');
+      
+      textInputs.forEach(input => {
+        if (input.value.trim() === '') {
+          input.classList.remove('is-valid');
+          input.classList.add('is-invalid');
+        } else {
+          input.classList.remove('is-invalid');
+          input.classList.add('is-valid');
         }
-        form.classList.add('was-validated');
-      }, false);
-    });
-  }, false);
-})();
+      });
+    }
+
+    updateInputClasses();
+
+    form.addEventListener('input', updateInputClasses);
+
+    form.addEventListener('submit', function(event) {
+      let isValid = true;
+      const textInputs = form.querySelectorAll('input[type="text"], textarea');
+      
+      textInputs.forEach(input => {
+        if (input.value.trim() === '') {
+          isValid = false;
+          input.classList.add('is-invalid');
+          input.classList.remove('is-valid');
+        } else {
+          input.classList.add('is-valid');
+          input.classList.remove('is-invalid');
+        }
+      });
+
+      if (!isValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        alert('Please fill in all text fields before submitting the exam.');
+      }
+
+    }, false);
+  });
 </script>
 {% endblock %}

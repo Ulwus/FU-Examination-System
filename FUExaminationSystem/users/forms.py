@@ -23,6 +23,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 class CustomAuthenticationForm(forms.Form):
     username = forms.CharField()
+    email = forms.CharField(widget=forms.EmailInput)
     password = forms.CharField(widget=forms.PasswordInput)
 
 
