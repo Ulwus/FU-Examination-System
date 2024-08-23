@@ -10,21 +10,29 @@ from .models import Answer, Exam, Submission, StudentAnswer, TempSubmission, Que
 from .forms import ExamForm, QuestionForm, AnswerForm
 from django.core.exceptions import ObjectDoesNotExist
 import logging
+from django.middleware.csrf import get_token
+
 from .tasks import finish_exam_task
 
 logger = logging.getLogger(__name__)
 
 @login_required
 def exam_list(request):
+    exams = Exam.objects.all().order_by('-is_active', '-end_time')
+    completed_exams = []
+    active_submissions = []
+
     if request.user.is_student:
-        exams = Exam.objects.all().order_by('-is_active', '-end_time')
-        completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False, is_submitted=True).values_list('exam_id', flat=True)
-        active_submissions = Submission.objects.filter(is_submitted=False, end_time=None).values_list('exam_id')
+        submissions = Submission.objects.filter(user=request.user)
+        for submission in submissions:
+            if submission.end_time is not None and submission.is_submitted:
+                completed_exams.append(submission.exam_id)
+            elif not submission.is_submitted and submission.end_time is None:
+                active_submissions.append(submission.exam_id)
     elif request.user.is_instructor:
-        exams = Exam.objects.filter(instructor=request.user)
+        exams = [exam for exam in exams if exam.instructor == request.user]
         active_submissions = None
     else:
-        exams = Exam.objects.all()
         active_submissions = None
 
     context = {
@@ -131,6 +139,12 @@ def take_exam(request, pk):
         defaults={'start_time': timezone.now()}
     )
 
+    #İlerde bunu database'den alacak şekilde değiştirilecek
+    predefined_vars = {
+        'x': 3,
+        'y': 5,
+    }
+
     if created:
         finish_time = timezone.now() + timedelta(minutes=exam.duration)
         finish_exam_task.apply_async((submission.id,), eta=finish_time)
@@ -165,12 +179,18 @@ def take_exam(request, pk):
 
     temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
     answered_dict = temp_submission.temp_answers if temp_submission else {}
+    request.session['predefined_vars'] = predefined_vars
+
 
     return render(request, 'exams/take_exam.html', {
         'exam': exam,
         'submission': submission,
         'questions': questions,
-        'answered_dict': json.dumps(answered_dict)
+        'answered_dict': json.dumps(answered_dict),
+        'csrf_token': get_token(request),
+        'predefined_vars': json.dumps(predefined_vars),
+
+
     })
 
 @login_required

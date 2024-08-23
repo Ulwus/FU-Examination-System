@@ -2,6 +2,59 @@
 {% load widget_tweaks %}
 
 {% block content %}
+
+<div id="ide-icon" class="position-fixed" style="top: 50%; right: -50px; transform: translateY(-50%); transition: right 0.3s; z-index: 1000;">
+    <button class="btn btn-success" onclick="toggleIde()">
+        <img src="/media/ide.png" alt="IDE Icon" style="height: 50px;">
+    </button>
+</div>
+
+<div id="ide-popup" class="position-fixed bg-light" style="top: 0; right: -500px; width: 500px; height: 100%; transition: right 0.3s; box-shadow: -2px 0 5px rgba(0,0,0,0.1); z-index: 100; border: 1px solid #28a745;">
+    <div class="p-3">
+        <h3 class="text-success">Python IDE</h3>
+        <div id="editor" style="height: 300px; border: 1px solid #28a745;"></div>
+        <div class="mt-2 d-flex justify-content-between">
+            <button class="btn btn-success" onclick="runCode()">Run Code</button>
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle" type="button" id="datasetDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Select Dataset
+                </button>
+            </div>
+            <button class="btn btn-outline-success" onclick="">Upload Dataset</button>
+        </div>
+        <pre id="output" class="mt-3 bg-light text-success p-2" style="border: 1px solid #28a745;"></pre>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Upload Dataset</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="datasetName">Dataset Name</label>
+                        <input type="text" class="form-control" id="datasetName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="datasetFile">File</label>
+                        <input type="file" class="form-control-file" id="datasetFile" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="uploadDataset()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container mt-5">
     <h2 class="text-success mb-4">{{ exam.title }}</h2>
     <div id="timer" class="mb-4"></div>
@@ -35,7 +88,7 @@
         <button type="submit" class="btn btn-success btn-lg btn-block mt-4 mb-5">Submit Exam</button>
     </form>
 </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 <script>
     const examDuration = {{ exam.duration }} * 60; 
     const startTime = new Date('{{ submission.start_time|date:"c" }}').getTime();
@@ -136,6 +189,81 @@
 
     updateTimer();
     const timerInterval = setInterval(updateTimer, 1000);
+
+
+
+    let editor;
+    let ideVisible = false;
+
+    function adjustIdeIconPosition() {
+        const ideIcon = document.getElementById('ide-icon');
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
+        if (scrollbarWidth > 0) {
+            ideIcon.style.right = `${scrollbarWidth - 10}px`; 
+        } else {
+            ideIcon.style.right = '0'; 
+        }
+    }
+
+    function toggleIde() {
+        const idePopup = document.getElementById('ide-popup');
+        const ideIcon = document.getElementById('ide-icon');
+        
+        if (ideVisible) {
+            idePopup.style.right = `-${idePopup.offsetWidth}px`;
+            adjustIdeIconPosition();
+        } else {
+            idePopup.style.right = '0';
+            ideIcon.style.right = `${parseInt(idePopup.offsetWidth + 10)}px`; 
+            if (!editor) {
+                editor = ace.edit("editor");
+                editor.setTheme("ace/theme/github");
+                editor.session.setMode("ace/mode/python");
+                editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: true,
+                    enableSnippets: true
+                });
+            }
+        }
+        ideVisible = !ideVisible;
+    }
+
+    window.addEventListener('load', adjustIdeIconPosition);
+    window.addEventListener('resize', adjustIdeIconPosition);
+
+    function runCode() {
+        const code = editor.getValue();
+        fetch('{% url "run_code" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: `code=${encodeURIComponent(code)}`
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                document.getElementById('output').innerText = `Error: ${data.error}`;
+            } else {
+                document.getElementById('output').innerText = data.output;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('output').innerText = `Error: ${error.message}`;
+        });
+    }
+
 </script>
 
 {% endblock %}
