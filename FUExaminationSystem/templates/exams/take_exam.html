@@ -88,7 +88,8 @@
         <button type="submit" class="btn btn-success btn-lg btn-block mt-4 mb-5">Submit Exam</button>
     </form>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ext-language_tools.min.js"></script>
 <script>
     const examDuration = {{ exam.duration }} * 60; 
     const startTime = new Date('{{ submission.start_time|date:"c" }}').getTime();
@@ -218,6 +219,7 @@
             ideIcon.style.right = `${parseInt(idePopup.offsetWidth + 10)}px`; 
             if (!editor) {
                 editor = ace.edit("editor");
+                ace.require("ace/ext/language_tools");
                 editor.setTheme("ace/theme/github");
                 editor.session.setMode("ace/mode/python");
                 editor.setOptions({

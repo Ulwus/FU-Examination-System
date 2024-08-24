@@ -18,29 +18,47 @@
               {% endif %}
             </div>
           {% endfor %}
+
+          <div class="mb-3">
+            <label for="predefined_vars_editor">Predefined Variables (Python Code):</label>
+            <div id="predefined_vars_editor" style="height: 200px; border: 1px solid #ccc;"></div>
+            <input type="hidden" name="predefined_vars" id="predefined_vars_input">
+          </div>
         </div>
         <div class="mt-4">
           <button type="submit" class="btn btn-primary btn-success">Create Exam</button>
         </div>
       </div>
-
-      
-      
     </form>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ext-language_tools.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
+        const predefinedVarsInput = document.getElementById('predefined_vars_input');
+        ace.require("ace/ext/language_tools");
+        const editor = ace.edit("predefined_vars_editor");
+        editor.setTheme("ace/theme/github");
+        editor.session.setMode("ace/mode/python");
+        editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: true,
+                    enableSnippets: true
+                });
+
         form.addEventListener('submit', function(event) {
             if (!form.checkValidity()) {
                 event.preventDefault();
                 event.stopPropagation();
-                
                 alert('Please fill in all required fields before submitting the exam.');
+            } else {
+                predefinedVarsInput.value = editor.getValue();
             }
             form.classList.add('was-validated');
         }, false);
     });
-    </script>
+  </script>
 {% endblock %}

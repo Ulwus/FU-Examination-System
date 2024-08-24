@@ -6,11 +6,9 @@ import subprocess
 def run_code(request):
     if request.method == 'POST':
         code = request.POST.get('code', '')
-        predefined_vars = request.session.get('predefined_vars', {})
+        predefined_vars = request.session.get('predefined_vars', '')
 
-      
-        predefined_vars_code = '\n'.join([f'{key} = {value}' for key, value in predefined_vars.items()])
-        code_with_vars = f"{predefined_vars_code}\n" + code
+        code_with_vars = f"{predefined_vars}\n{code}"
 
         try:
             result = subprocess.run(['python', '-c', code_with_vars], capture_output=True, text=True, timeout=10)

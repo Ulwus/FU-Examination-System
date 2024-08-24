@@ -60,6 +60,11 @@ def create_exam(request):
             exam = form.save(commit=False)
             exam.instructor = request.user
             exam.save()
+
+            predefined_vars = request.POST.get('predefined_vars', '')
+            exam.predefined_vars = predefined_vars
+            exam.save()
+
             return redirect('create_exam_questions', pk=exam.pk)
     else:
         form = ExamForm()
@@ -139,12 +144,6 @@ def take_exam(request, pk):
         defaults={'start_time': timezone.now()}
     )
 
-    #İlerde bunu database'den alacak şekilde değiştirilecek
-    predefined_vars = {
-        'x': 3,
-        'y': 5,
-    }
-
     if created:
         finish_time = timezone.now() + timedelta(minutes=exam.duration)
         finish_exam_task.apply_async((submission.id,), eta=finish_time)
@@ -179,7 +178,9 @@ def take_exam(request, pk):
 
     temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
     answered_dict = temp_submission.temp_answers if temp_submission else {}
+    predefined_vars = exam.predefined_vars if exam.predefined_vars else ''
     request.session['predefined_vars'] = predefined_vars
+
 
 
     return render(request, 'exams/take_exam.html', {
@@ -188,7 +189,7 @@ def take_exam(request, pk):
         'questions': questions,
         'answered_dict': json.dumps(answered_dict),
         'csrf_token': get_token(request),
-        'predefined_vars': json.dumps(predefined_vars),
+        'predefined_vars': predefined_vars,
 
 
     })
