@@ -62,6 +62,19 @@
             margin-top: 20px;
         }
 
+        .messages {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1050;
+            max-width: 300px;
+        }
+
+        .alert {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
         .btn-custom {
             background-color: var(--secondary-color);
             color: white;
@@ -117,6 +130,28 @@
             object-fit: cover; /* Resmin doğru şekilde kesilmesini sağlar */
         }
 
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.3em 0.6em;
+        }
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .card-title {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        .text-muted {
+            color: #7f8c8d !important;
+        }
+
         .form-label {
             font-weight: bold;
         }
@@ -141,12 +176,97 @@
         }
         .card {
             border: 1px solid #a2d5a3; /* Yeşil sınır rengi */
-            border-radius: 0.25rem; /* Köşe yuvarlama */
+            border-radius: 1.45rem; /* Köşe yuvarlama */
         }
         .card-header {
             background-color: #a2d5a3; /* Kart başlığı arka plan rengi */
+           
             color: white; /* Kart başlığı metin rengi */
         }
+
+
+        .exam-list-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .exam-category {
+            margin-bottom: 2rem;
+        }
+        .exam-category h2 {
+            color: #343a40;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .exam-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0px 3px 6px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .exam-card:hover {
+            transform: translateY(-2px);
+        }
+        .exam-card-header {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .exam-card-body {
+            padding: 1rem;
+        }
+        .exam-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .exam-detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0.5rem;
+        }
+        .exam-detail-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+        .exam-detail-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #28a745;
+        }
+        .exam-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-outline-primary {
+            color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25em 0.5em;
+            border-radius: 0.25rem;
+        }
+        
     </style>
 </head>
 <body style="z-index:999">
@@ -184,12 +304,15 @@
         </nav>
     </header>
     {% if messages %}
-  <div class="messages">
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  </div>
-{% endif %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <main class="containerMain" style="z-index:1">
         {% block content %}
         {% endblock %}
