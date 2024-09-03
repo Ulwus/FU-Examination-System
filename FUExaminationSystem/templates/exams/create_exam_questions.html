@@ -12,7 +12,7 @@
     {% endfor %}
   {% endif %}
 
-  <form method="post" class="needs-validation" novalidate>
+  <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
     
     <h3 class="mb-4 text-secondary">Questions</h3>
@@ -26,6 +26,20 @@
           {{ question_form.text.label_tag }}
           {% render_field question_form.text class="form-control" %}
           {% for error in question_form.text.errors %}
+            <span class="text-danger">{{ error }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="form-group mb-4">
+          <label for="{{ question_form.image.id_for_label }}" class="d-block">Question Image</label>
+          <div class="custom-file-upload">
+            <input type="file" id="{{ question_form.image.id_for_label }}" name="{{ question_form.image.html_name }}" class="custom-file-input" accept="image/*" onchange="previewImage(this, {{ forloop.counter0 }})">
+            <label for="{{ question_form.image.id_for_label }}" class="custom-file-label">Choose an image</label>
+          </div>
+          <div id="imagePreview_{{ forloop.counter0 }}" class="mt-2 d-none">
+            <img src="" alt="Question Image Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+          </div>
+          {% for error in question_form.image.errors %}
             <span class="text-danger">{{ error }}</span>
           {% endfor %}
         </div>
@@ -60,6 +74,31 @@
     <button type="submit" class="btn btn-primary btn-lg btn-block mt-4 mb-5">Save Questions and Answers</button>
   </form>
 </div>
+
+<style>
+  .custom-file-upload {
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  
+  .custom-file-upload:hover {
+    background-color: #e9ecef;
+  }
+  
+  .custom-file-input {
+    display: none;
+  }
+  
+  .custom-file-label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -107,5 +146,25 @@
 
     }, false);
   });
+
+  function previewImage(input, questionIndex) {
+    const preview = document.getElementById(`imagePreview_${questionIndex}`);
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onloadend = function () {
+      preview.querySelector('img').src = reader.result;
+      preview.classList.remove('d-none');
+    }
+
+    if (file) {
+      reader.readAsDataURL(file);
+      input.nextElementSibling.textContent = file.name;
+    } else {
+      preview.querySelector('img').src = "";
+      preview.classList.add('d-none');
+      input.nextElementSibling.textContent = "Choose an image";
+    }
+  }
 </script>
 {% endblock %}

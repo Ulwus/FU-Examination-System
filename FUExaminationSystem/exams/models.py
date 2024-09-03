@@ -35,6 +35,7 @@ class Question(models.Model):
     exam = models.ForeignKey(Exam, related_name='questions', on_delete=models.CASCADE)
     question_type = models.ForeignKey(QuestionType, on_delete=models.SET_NULL, null=True)
     text = models.TextField()
+    image = models.ImageField(upload_to='question_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     marks = models.FloatField(default=1.0)

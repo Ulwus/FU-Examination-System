@@ -14,7 +14,8 @@ class ExamForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ['text']
+        fields = ['text', 'image']
+        
 
 class AnswerForm(forms.ModelForm):
     class Meta:

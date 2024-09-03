@@ -66,6 +66,14 @@
                 <h4 class="card-title">Question {{ forloop.counter }}</h4>
                 <div class="form-group mb-4">
                     <label class="text-success"><strong>{{ question.text }}</strong></label>
+                    
+                </div>
+
+                <div class="form-group mb-4">
+                    {% if question.image %}
+                        <img src="{{ question.image.url }}" alt="Question Image" class="img-fluid mt-3 mb-3">
+                    {% endif %}
+                    
                 </div>
 
                 <h5 class="mb-3 text-success">Answers for Question {{ forloop.counter }}</h5>

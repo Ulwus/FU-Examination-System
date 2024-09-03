@@ -11,6 +11,7 @@ from .forms import ExamForm, QuestionForm, AnswerForm
 from django.core.exceptions import ObjectDoesNotExist
 import logging
 from django.middleware.csrf import get_token
+from django.db.models import Avg
 
 from .tasks import finish_exam_task
 
@@ -79,7 +80,7 @@ def create_exam_questions(request, pk):
     AnswerFormSet = formset_factory(AnswerForm, extra=4)
 
     if request.method == 'POST':
-        question_formset = QuestionFormSet(request.POST, prefix='questions')
+        question_formset = QuestionFormSet(request.POST, request.FILES, prefix='questions')
         answer_formsets = [AnswerFormSet(request.POST, prefix=f'answers_{i}') for i in range(exam.total_marks)]
 
         if question_formset.is_valid() and all(formset.is_valid() for formset in answer_formsets):
@@ -88,6 +89,7 @@ def create_exam_questions(request, pk):
                     if question_form.cleaned_data:
                         question = question_form.save(commit=False)
                         question.exam = exam
+                        question.image = question_form.cleaned_data.get('image')
                         question.save()
 
                         answer_formset = answer_formsets[index]
@@ -193,6 +195,70 @@ def take_exam(request, pk):
 
 
     })
+
+
+
+
+@login_required
+def student_dashboard(request):
+    student = request.user
+    submissions = Submission.objects.filter(user=student)
+
+    total_exams = submissions.count()
+    completed_exams = 0
+    graded_submissions = []
+    recent_exams = []
+    exam_performance = []
+    upcoming_exams = 0
+
+    for submission in submissions:
+        if submission.is_submitted:
+            completed_exams += 1
+        if submission.is_graded:
+            graded_submissions.append(submission)
+        recent_exams.append(submission)
+
+    upcoming_exams_list = []
+    all_exams = Exam.objects.all()
+    for exam in all_exams:
+        if exam.start_time > timezone.now() and exam.is_active:
+            upcoming_exams_list.append(exam)
+
+    upcoming_exams = len(upcoming_exams_list)
+
+    total_score = 0
+    for submission in graded_submissions:
+        total_score += submission.score
+        exam_performance.append({
+            'name': submission.exam.title,
+            'score': submission.score
+        })
+    
+    average_score = round(total_score / len(graded_submissions), 2) if graded_submissions else 0
+
+    recent_exams = sorted(recent_exams, key=lambda x: x.exam.start_time, reverse=True)[:5]
+
+    context = {
+        'studentData': {
+            'name': student.get_full_name(),
+            'totalExams': total_exams,
+            'completedExams': completed_exams,
+            'upcomingExams': upcoming_exams,
+            'averageScore': average_score,
+            'recentExams': [
+                {
+                    'title': submission.exam.title,
+                    'date': submission.exam.start_time.strftime('%d %b %Y'),
+                    'duration': submission.exam.duration,
+                    'status': 'completed' if submission.is_submitted else 'incomplete'
+                } for submission in recent_exams
+            ],
+            'examPerformance': exam_performance
+        }
+    }
+
+    return render(request, 'users/student_dashboard.html', context)
+
 
 @login_required
 def exam_result(request, pk):
