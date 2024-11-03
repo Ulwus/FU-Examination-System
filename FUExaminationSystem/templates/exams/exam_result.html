@@ -1,34 +1,347 @@
 {% extends 'base_generic.html' %}
-{% load widget_tweaks %}
-
-{% block title %}Exam Result{% endblock %}
-
+{% block title %}Sınav Sonucu - {{ submission.exam.title }}{% endblock %}
 {% block content %}
-<div class="container py-5">
-    <h2 class="text-center custom-green-text">{{ submission.exam.title|truncatechars:30 }} - Result</h2>
-    <div class="card my-4">
-        <div class="card-header custom-green-border">
-            <h5 class="mb-0">Exam Result</h5>
+<div class="result-container">
+    <div class="result-card">
+        <div class="result-header">
+            <h1 class="text-gradient">{{ submission.exam.title }}</h1>
+            {% if submission.is_graded %}
+                <div class="result-badge">
+                    <i class="fas fa-star"></i>
+                    <span>{{ submission.score|floatformat:2 }}</span>
+                </div>
+            {% endif %}
         </div>
-        <div class="card-body">
-            <p><strong>Student:</strong> {{ submission.user.username }}</p>
-            <p><strong>Score:</strong> {% if submission.is_graded %}{{ submission.score }} {% else %} Sonucu Görmek İçin Sınavın Bitmesini Bekleyin {% endif %}</p>
-            <p><strong>Graded:</strong> {{ submission.is_graded }}</p>
-            <hr>
+        
+        <div class="result-body">
+            {% if request.user.is_instructor %}
+                <div class="all-results mb-4">
+                    <h3><i class="fas fa-users"></i> Tüm Katılımcılar</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Öğrenci</th>
+                                    <th>Puan</th>
+                                    <th>Başlangıç</th>
+                                    <th>Bitiş</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in all_submissions %}
+                                <tr {% if sub.id == submission.id %}class="active-row"{% endif %}>
+                                    <td>{{ sub.user.username }}</td>
+                                    <td>
+                                        {% if sub.is_graded %}
+                                            <span class="badge bg-success">{{ sub.score|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Beklemede</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ sub.start_time|date:"H:i d/m/Y" }}</td>
+                                    <td>{{ sub.end_time|date:"H:i d/m/Y" }}</td>
+                                    <td>
+                                        {% if sub.is_graded %}
+                                            <span class="badge bg-success">Tamamlandı</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Değerlendiriliyor</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
 
-            <h3 class="custom-green-text">Answers</h3>
-            <hr>
-            {% for answer in submission.student_answers.all %}
-                <div class="form-group">
-                    <h5><strong>{{ answer.question.text }}</strong></h5>
+            <div class="answers-section">
+                <h3><i class="fas fa-list"></i> Cevaplarınız</h3>
+                {% for answer in submission.student_answers.all %}
+                <div class="answer-card">
+                    <div class="question-text">
+                        <strong>Soru {{ forloop.counter }}</strong>
+                        <p>{{ answer.question.text }}</p>
+                        {% if answer.question.image %}
+                        <img src="{{ answer.question.image.url }}" alt="Soru Görseli" class="img-fluid rounded mt-2">
+                        {% endif %}
+                    </div>
+                    
                     {% if answer.answer %}
-                        <p>Selected Answer: {{ answer.answer.text }}</p>
+                        <div class="answer-text {% if submission.is_graded %}{% if answer.answer.is_correct %}correct{% else %}incorrect{% endif %}{% else %}pending{% endif %}">
+                            <div class="selected-answer">
+                                {% if submission.is_graded %}
+                                    <i class="fas {% if answer.answer.is_correct %}fa-check text-success{% else %}fa-times text-danger{% endif %} me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-clock text-warning me-2"></i>
+                                {% endif %}
+                                <span>Sizin Cevabınız:</span> {{ answer.answer.text }}
+                            </div>
+                            {% if submission.is_graded and not answer.answer.is_correct %}
+                                <div class="correct-answer">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <span>Doğru Cevap:</span> 
+                                    {% for ans in answer.question.answers.all %}
+                                        {% if ans.is_correct %}
+                                            {{ ans.text }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                     {% else %}
-                        <p>Answer: {{ answer.text_answer }}</p>
+                        <div class="answer-text unanswered">
+                            <i class="fas fa-minus-circle text-muted me-2"></i>
+                            <span>Bu soru cevaplanmamış</span>
+                            {% if submission.is_graded %}
+                                <div class="correct-answer mt-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <span>Doğru Cevap:</span>
+                                    {% for ans in answer.question.answers.all %}
+                                        {% if ans.is_correct %}
+                                            {{ ans.text }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
+
+
+<style>
+.active-row {
+    background: rgba(43, 68, 255, 0.05) !important;
+}
+.result-container {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+.all-results {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.result-card {
+    margin: 0 auto;
+    width: 95%;
+    max-width: 1200px;
+    max-height: 95vh;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-header {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.text-gradient {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.result-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.5rem;
+}
+
+.result-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.result-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: #f8faff;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.info-item i {
+    font-size: 2rem;
+    color: #2b44ff;
+    margin-bottom: 0.5rem;
+}
+
+.info-item span {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #2d3748;
+}
+
+.answers-section {
+    margin-top: 2rem;
+}
+
+.answers-section h3 {
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.answer-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.question-text {
+    margin-bottom: 1rem;
+}
+
+.question-text strong {
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+.answer-text {
+    padding: 1rem;
+    border-radius: 10px;
+    position: relative;
+}
+
+.answer-text.correct {
+    background: rgba(46, 204, 113, 0.1);
+    border-left: 4px solid #2ecc71;
+}
+
+.answer-text.incorrect {
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 4px solid #e74c3c;
+}
+
+.answer-text.pending {
+    background: rgba(241, 196, 15, 0.1);
+    border-left: 4px solid #f1c40f;
+}
+
+
+.answer-text.unanswered {
+    background: rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #95a5a6;
+}
+
+.selected-answer {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.correct-answer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    color: #27ae60;
+}
+
+.answer-text span {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.answer-text i {
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .answer-card {
+        padding: 1rem;
+    }
+    
+    .answer-text {
+        padding: 0.75rem;
+    }
+}
+@media (max-width: 768px) {
+    .result-card {
+        width: 100%;
+        height: 100vh;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .result-header {
+        padding: 1.5rem;
+    }
+
+    .text-gradient {
+        font-size: 2rem;
+    }
+
+    .result-body {
+        padding: 1rem;
+    }
+
+    .info-item {
+        padding: 1rem;
+    }
+}
+
+/* Scrollbar Stilleri */
+.result-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.result-body::-webkit-scrollbar-track {
+    background: #f1f5fe;
+}
+
+.result-body::-webkit-scrollbar-thumb {
+    background: #2b44ff;
+    border-radius: 4px;
+}
+
+.result-body::-webkit-scrollbar-thumb:hover {
+    background: #3366ff;
+}
+</style>
 {% endblock %}

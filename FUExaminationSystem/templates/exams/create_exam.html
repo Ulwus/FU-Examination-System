@@ -2,34 +2,161 @@
 {% load widget_tweaks %}
 
 {% block content %}
-  <div class="container mt-5">
-    <h2 class="mb-4">Create Exam</h2>
-    <form method="post" class="needs-validation" novalidate>
-      {% csrf_token %}
+<style>
+  .create-exam-container {
+      min-height: 100vh;
+      padding: 3rem 0;
+  }
+  
+  .create-form-card {
+      background: rgba(255, 255, 255, 0.9); 
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .text-gradient {
+      background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+  }
+  
+  .form-group {
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.5s ease;
+  }
+  
+  .form-label {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      display: block;
+  }
+  
+  .form-control {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.75rem;
+      transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+      border-color: #2b44ff;
+      box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
+      outline: none;
+  }
+  
+  .help-text {
+      color: #718096;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+  }
+  
+  .editor-container {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+  }
+  
+  #predefined_vars_editor {
+      height: 300px;
+      font-size: 14px;
+      border-radius: 12px;
+  }
+  
+  .submit-button {
+      background: linear-gradient(45deg, #2b44ff, #3366ff);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+  }
+  
+  .submit-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+  }
+  
+  @keyframes slideIn {
+      from {
+          opacity: 0;
+          transform: translateY(10px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+  
+  @media (max-width: 768px) {
+      .create-exam-container {
+          padding: 1.5rem;
+      }
       
-      <div class="card shadow-sm">
-        <div class="card-body">
-          {% for field in form %}
-            <div class="mb-3">
-              {{ field.label_tag }}
-              {% render_field field class="form-control" %}
-              {% if field.help_text %}
-                <small class="form-text text-muted">{{ field.help_text }}</small>
-              {% endif %}
-            </div>
-          {% endfor %}
-
-          <div class="mb-3">
-            <label for="predefined_vars_editor">Predefined Variables (Python Code):</label>
-            <div id="predefined_vars_editor" style="height: 200px; border: 1px solid #ccc;"></div>
-            <input type="hidden" name="predefined_vars" id="predefined_vars_input">
+      .text-gradient {
+          font-size: 2rem;
+      }
+      
+      .form-control {
+          font-size: 1rem;
+      }
+      
+      .submit-button {
+          padding: 0.8rem 1.5rem;
+          font-size: 1rem;
+      }
+  }
+  </style>
+  
+  <div class="create-exam-container">
+      <div class="container">
+          <h1 class="text-gradient text-center">Yeni Sınav Oluştur</h1>
+          <div class="create-form-card">
+              <form method="post" class="needs-validation" novalidate>
+                  {% csrf_token %}
+                  
+                  {% for field in form %}
+                  <div class="form-group">
+                      <label class="form-label">{{ field.label }}</label>
+                      {% render_field field class="form-control" %}
+                      {% if field.help_text %}
+                          <small class="help-text">{{ field.help_text }}</small>
+                      {% endif %}
+                  </div>
+                  {% endfor %}
+  
+                  <div class="form-group">
+                      <label class="form-label">Python Değişkenleri</label>
+                      <div class="editor-container">
+                          <div id="predefined_vars_editor"></div>
+                      </div>
+                      <input type="hidden" name="predefined_vars" id="predefined_vars_input">
+                      <small class="help-text">Sınav için önceden tanımlanacak Python değişkenlerini buraya yazın.</small>
+                  </div>
+  
+                  <button type="submit" class="submit-button">
+                      <i class="fas fa-plus-circle"></i>
+                      Sınavı Oluştur
+                  </button>
+              </form>
           </div>
-        </div>
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary btn-success">Create Exam</button>
-        </div>
       </div>
-    </form>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>

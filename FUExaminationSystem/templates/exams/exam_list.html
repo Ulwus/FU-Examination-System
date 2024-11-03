@@ -1,122 +1,279 @@
 {% extends 'base_generic.html' %}
-
-{% block title %}Exams{% endblock %}
-
+{% block title %}Sınavlar{% endblock %}
 {% block content %}
 
+<style>
 
-<div class="exam-list-container">
+    .btn-secondary:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
     
+    .btn-secondary:disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .dashboard-container {
+        min-height: 100vh;
+        padding: 3rem 0;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+    
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge.bg-success {
+        background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    }
+    
+    .badge.bg-secondary {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+    }
+    
+    .badge.bg-warning {
+        background: linear-gradient(135deg, #f1c40f, #f39c12) !important;
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-icon i {
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+    }
+    
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+        border: none;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+        border: none;
+        color: white;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #2b44ff;
+        background: transparent;
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #95a5a6;
+        background: transparent;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    h4 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #2d3748;
+    }
+    
+    .text-muted {
+        color: #718096 !important;
+    }
+    
+    [data-aos] {
+        transition-duration: 800ms !important;
+    }
+    
+    small {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .stat-card .row {
+        margin: -0.5rem;
+    }
+    
+    .stat-card .col-4 {
+        padding: 0.5rem;
+    }
+    </style>
+<div class="dashboard-container">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h1 class="text-gradient">Sınav Platformu</h1>
+            {% if user.is_instructor %}
+            <div class="mt-4">
+                <a href="{% url 'create_exam' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Yeni Sınav Oluştur
+                </a>
+            </div>
+            {% endif %}
+        </div>
 
-    <div class="exam-category">
-        <h2>Active/Ongoing Exams</h2>
-        <div class="row">
-            {% for exam in exams %}
+        <div class="mb-5">
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-clock me-2"></i> Aktif Sınavlar
+            </h2>
+            <div class="row g-4">
+                {% for exam in exams %}
                 {% if exam.is_active %}
-                    <div class="col-md-6 mb-4">
-                        <div class="exam-card">
-                            <div class="exam-card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">{{ exam.title }}</h5>
-                                <span class="badge bg-success">Online Exam</span>
+                <div class="col-md-6 col-lg-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-success">Aktif</span>
+                            <small>{{ exam.end_time|timeuntil }} kaldı</small>
+                        </div>
+                        <h4>{{ exam.title }}</h4>
+                        <p class="text-muted">{{ exam.description|truncatewords:20 }}</p>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-primary bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
+                                <small class="d-block text-muted">{{ exam.duration }} dk</small>
                             </div>
-                            <div class="exam-card-body">
-                                <p class="text-muted">{{ exam.description|truncatechars:100 }}</p>
-                                <div class="exam-details">
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Date</span>
-                                        <span class="exam-detail-value">{{ exam.start_time|date:"d-m-Y" }}</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Duration</span>
-                                        <span class="exam-detail-value">{{ exam.duration }} minutes</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Marks</span>
-                                        <span class="exam-detail-value">{{ exam.total_marks }}</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">End Date</span>
-                                        <span class="exam-detail-value">{{ exam.end_time|date:"d-m-Y"  }}</span>
-                                    </div>
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-success bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-question-circle text-success"></i>
+                                </div>  
+                                <small class="d-block text-muted">{{ exam.total_marks }} soru</small>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-warning bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-star text-warning"></i>
                                 </div>
-                                <div class="exam-actions">
-                                    <small class="text-muted">Check-in Time: {{ exam.start_time|time:"H:i A" }}</small>
-                                    <div>
-                                    
-                                        {% if request.user.is_student %}
-                                            {% if exam.id in completed_exams %}
-                                                <a href="{% url 'exam_result' exam.pk %}" class="btn btn-success btn-sm">View Result</a>
-                                            {% elif exam.id in active_submissions %}
-                                                <a href="{% url 'take_exam' exam.pk %}" class="btn btn-warning btn-sm">Continue</a>
-                                            {% else %}
-                                                <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-sm">Start</a>
-                                            {% endif %}
-                                        {% elif request.user.is_instructor %}
-                                            <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-primary btn-sm">Grade</a>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                <small class="d-block text-muted">{{ exam.passing_marks }} puan</small>
                             </div>
                         </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
 
-    <div class="exam-category">
-        <h2>Inactive/Past Exams</h2>
-        <div class="row">
-            {% for exam in exams %}
+                        <div class="d-grid gap-2">
+                            {% if request.user.is_student %}
+                                {% if exam.id in completed_exams %}
+                                    <a href="{% url 'exam_result' exam.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Sonuçları Gör
+                                    </a>
+                                {% elif exam.id in active_submissions %}
+                                    <a href="{% url 'take_exam' exam.pk %}" class="btn btn-warning">Devam Et</a>
+                                {% else %}
+                                    {% if exam.start_time > now %}
+                                        <button class="btn btn-secondary" disabled>
+                                            <i class="fas fa-clock me-2"></i>
+                                            {{ exam.start_time|date:"d M Y H:i" }} tarihinde başlayacak
+                                        </button>
+                                    {% else %}
+                                        <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary">
+                                            <i class="fas fa-play me-2"></i>
+                                            Sınava Başla
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            {% elif request.user.is_instructor %}
+                                <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-primary">Notlandır</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-history me-2"></i> Geçmiş Sınavlar
+            </h2>
+            <div class="row g-4">
+                {% for exam in exams %}
                 {% if not exam.is_active %}
-                    <div class="col-md-6 mb-4">
-                        <div class="exam-card">
-                            <div class="exam-card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">{{ exam.title }}</h5>
-                                <span class="badge bg-secondary">Offline Exam</span>
+                <div class="col-md-6 col-lg-4">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-secondary">Tamamlandı</span>
+                            <small>{{ exam.end_time|date:"d M Y" }}</small>
+                        </div>
+                        <h4>{{ exam.title }}</h4>
+                        <p class="text-muted">{{ exam.description|truncatewords:20 }}</p>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-primary bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-clock text-primary"></i>
+                                </div>
+                                <small class="d-block text-muted">{{ exam.duration }} dk</small>
                             </div>
-                            <div class="exam-card-body">
-                                <p class="text-muted">{{ exam.description|truncatechars:100 }}</p>
-                                <div class="exam-details">
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Date</span>
-                                        <span class="exam-detail-value">{{ exam.start_time|date:"d-m-Y" }}</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Duration</span>
-                                        <span class="exam-detail-value">{{ exam.duration }} minutes</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Marks</span>
-                                        <span class="exam-detail-value">{{ exam.total_marks }}</span>
-                                    </div>
-                                    <div class="exam-detail-item">
-                                        <span class="exam-detail-label">Time</span>
-                                        <span class="exam-detail-value">{{ exam.start_time|time:"H:i A" }}</span>
-                                    </div>
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-success bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-question-circle text-success"></i>
                                 </div>
-                                <div class="exam-actions">
-                                    <small class="text-muted">Exam Completed</small>
-                                    <div>
-                                        {% if request.user.is_student %}
-                                            <a href="{% url 'exam_result' exam.pk %}" class="btn btn-success btn-sm">View Result</a>
-                                        {% elif request.user.is_instructor %}
-                                            <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-primary btn-sm">Review Grades</a>
-                                        {% endif %}
-                                    </div>
+                                <small class="d-block text-muted">{{ exam.total_marks }} soru</small>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="stat-icon bg-warning bg-opacity-10 mx-auto mb-2">
+                                    <i class="fas fa-star text-warning"></i>
                                 </div>
+                                <small class="d-block text-muted">{{ exam.passing_marks }} puan</small>
                             </div>
                         </div>
+
+                        <div class="d-grid">
+                            {% if request.user.is_student %}
+                                <a href="{% url 'exam_result' exam.pk %}" class="btn btn-outline-secondary">Sonuçları Gör</a>
+                            {% elif request.user.is_instructor %}
+                                <a href="{% url 'grade_exam' exam.pk %}" class="btn btn-outline-secondary">Notlandır</a>
+                            {% endif %}
+                        </div>
                     </div>
+                </div>
                 {% endif %}
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
-
-    {% if not exams %}
-        <p class="text-center">No exams available.</p>
-    {% endif %}
-
-    
 </div>
 {% endblock %}

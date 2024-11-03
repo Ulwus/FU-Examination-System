@@ -3,102 +3,284 @@
 {% load exam_extras %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4 text-primary">Create Questions for Exam: {{ exam.title }}</h2>
-  
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
 
-  <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-    {% csrf_token %}
-    
-    <h3 class="mb-4 text-secondary">Questions</h3>
-    {{ question_formset.management_form }}
 
-    {% for question_form in question_formset %}
-    <div class="card mb-4 shadow-sm">
-      <div class="card-body">
-        <h4 class="card-title">Question {{ forloop.counter }}</h4>
-        <div class="form-group mb-4">
-          {{ question_form.text.label_tag }}
-          {% render_field question_form.text class="form-control" %}
-          {% for error in question_form.text.errors %}
-            <span class="text-danger">{{ error }}</span>
-          {% endfor %}
-        </div>
-
-        <div class="form-group mb-4">
-          <label for="{{ question_form.image.id_for_label }}" class="d-block">Question Image</label>
-          <div class="custom-file-upload">
-            <input type="file" id="{{ question_form.image.id_for_label }}" name="{{ question_form.image.html_name }}" class="custom-file-input" accept="image/*" onchange="previewImage(this, {{ forloop.counter0 }})">
-            <label for="{{ question_form.image.id_for_label }}" class="custom-file-label">Choose an image</label>
-          </div>
-          <div id="imagePreview_{{ forloop.counter0 }}" class="mt-2 d-none">
-            <img src="" alt="Question Image Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-          </div>
-          {% for error in question_form.image.errors %}
-            <span class="text-danger">{{ error }}</span>
-          {% endfor %}
-        </div>
-
-        <h5 class="mb-3">Answers for Question {{ forloop.counter }}</h5>
-        {% with answer_formset=answer_formsets|get_item:forloop.counter0 %}
-          {{ answer_formset.management_form }}
-          {% for answer_form in answer_formset %}
-            <div class="form-group mb-3">
-              <div class="input-group" style="z-index:0">
-                {% render_field answer_form.text class="form-control" placeholder="Answer text" %}
-                <div class="input-group-append">
-                  <div class="input-group-text">
-                    {% render_field answer_form.is_correct class="form-check-input" %}
-                    <label class="form-check-label ml-2" for="{{ answer_form.is_correct.id_for_label }}">Correct</label>
-                  </div>
-                </div>
-              </div>
-              {% for error in answer_form.text.errors %}
-                <span class="text-danger">{{ error }}</span>
-              {% endfor %}
-              {% for error in answer_form.is_correct.errors %}
-                <span class="text-danger">{{ error }}</span>
-              {% endfor %}
-            </div>
-          {% endfor %}
-        {% endwith %}
+<div class="dashboard-container">
+  <div class="container py-5">
+      <div class="text-center mb-5" data-aos="fade-down">
+          <h1 class="text-gradient">{{ exam.title }}</h1>
+          <p class="lead text-muted">Sınav Soruları Oluşturma Paneli</p>
       </div>
-    </div>
-    {% endfor %}
 
-    <button type="submit" class="btn btn-primary btn-lg btn-block mt-4 mb-5">Save Questions and Answers</button>
-  </form>
+      {% if messages %}
+          {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+          {% endfor %}
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {{ question_formset.management_form }}
+
+          {% for question_form in question_formset %}
+          <div class="question-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}">
+              <div class="question-header">
+                  <div class="question-number">
+                      <span>{{ forloop.counter }}</span>
+                  </div>
+                  <h4>Soru {{ forloop.counter }}</h4>
+              </div>
+
+              <div class="question-body">
+                  <div class="form-group">
+                      <label class="form-label">
+                          <i class="fas fa-question-circle text-primary me-2"></i>
+                          Soru Metni
+                      </label>
+                      {% render_field question_form.text class="form-control" placeholder="Sorunuzu buraya yazın..." %}
+                      {% for error in question_form.text.errors %}
+                          <div class="error-message">
+                              <i class="fas fa-exclamation-circle"></i>
+                              {{ error }}
+                          </div>
+                      {% endfor %}
+                  </div>
+
+                  <div class="form-group mt-4">
+                      <label class="form-label">
+                          <i class="fas fa-image text-primary me-2"></i>
+                          Soru Görseli
+                      </label>
+                      <div class="image-upload-container">
+                          <input type="file" 
+                                 id="{{ question_form.image.id_for_label }}" 
+                                 name="{{ question_form.image.html_name }}" 
+                                 class="custom-file-input" 
+                                 accept="image/*" 
+                                 onchange="previewImage(this, {{ forloop.counter0 }})">
+                          <label for="{{ question_form.image.id_for_label }}" class="image-upload-label">
+                              <i class="fas fa-cloud-upload-alt"></i>
+                              <span>Görsel Yüklemek İçin Tıklayın</span>
+                          </label>
+                      </div>
+                      <div id="imagePreview_{{ forloop.counter0 }}" class="image-preview d-none">
+                          <img src="" alt="Soru Görseli Önizleme">
+                      </div>
+                  </div>
+
+                  <div class="answers-section mt-4">
+                      <h5 class="answers-title">
+                          <i class="fas fa-check-circle text-success me-2"></i>
+                          Cevap Seçenekleri
+                      </h5>
+                      {% with answer_formset=answer_formsets|get_item:forloop.counter0 %}
+                          {{ answer_formset.management_form }}
+                          {% for answer_form in answer_formset %}
+                              <div class="answer-item">
+                                  <div class="input-group">
+                                      {% render_field answer_form.text class="form-control" placeholder="Cevap metni..." %}
+                                      <div class="input-group-append">
+                                          <div class="input-group-text">
+                                              {% render_field answer_form.is_correct class="form-check-input" %}
+                                              <label class="form-check-label ms-2">Doğru</label>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          {% endfor %}
+                      {% endwith %}
+                  </div>
+              </div>
+          </div>
+          {% endfor %}
+
+          <div class="submit-section mt-5 mb-4" data-aos="fade-up">
+              <button type="submit" class="submit-button">
+                  <i class="fas fa-save me-2"></i>
+                  Soruları Kaydet
+              </button>
+          </div>
+      </form>
+  </div>
 </div>
 
 <style>
-  .custom-file-upload {
-    display: inline-block;
-    padding: 6px 12px;
-    cursor: pointer;
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    transition: all 0.3s ease;
+.dashboard-container {
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.text-gradient {
+  background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  font-size: 2.5rem;
+}
+
+.question-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: transform 0.3s ease;
+}
+
+.question-card:hover {
+  transform: translateY(-5px);
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.question-number {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.image-upload-container {
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.image-upload-container:hover {
+  border-color: #2b44ff;
+  background: rgba(43, 68, 255, 0.02);
+}
+
+.image-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #718096;
+  cursor: pointer;
+}
+
+.image-upload-label i {
+  font-size: 2rem;
+  color: #2b44ff;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.answers-section {
+  background: #f8faff;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.answers-title {
+  font-size: 1.1rem;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+}
+
+.answer-item {
+  margin-bottom: 1rem;
+}
+
+.input-group {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+  box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
+}
+
+.input-group-text {
+  background: #f8faff;
+  border: none;
+  padding: 0.75rem 1rem;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-button {
+  background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .question-card {
+      padding: 1.5rem;
   }
   
-  .custom-file-upload:hover {
-    background-color: #e9ecef;
+  .text-gradient {
+      font-size: 2rem;
   }
   
-  .custom-file-input {
-    display: none;
+  .submit-button {
+      padding: 0.8rem 1.5rem;
   }
-  
-  .custom-file-label {
-    margin-bottom: 0;
-    cursor: pointer;
-  }
+}
 </style>
+
+
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {

@@ -1,0 +1,185 @@
+{% extends "base_generic.html" %}
+{% block title %}Model Yükle - {{ competition.title }}{% endblock %}
+{% block content %}
+<div class="submit-container">
+    <div class="submit-card">
+        <div class="submit-header">
+            <h1 class="text-gradient">Model Yükle</h1>
+            <div class="submission-stats">
+                <div class="stat-item">
+                    <i class="fas fa-redo-alt"></i>
+                    <span>{{ remaining_submissions }}</span>
+                    <small>Kalan Hak</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-body">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <p>Lütfen .pkl formatında model dosyası yükleyiniz.</p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="upload-field">
+                    <label class="upload-label" for="{{ field.id_for_label }}">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small class="help-text">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="field-error">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="submit-button">
+                    <i class="fas fa-upload"></i> Modeli Yükle
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.submit-container {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.submit-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
+}
+
+.submit-header {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    padding: 2rem;
+    color: white;
+    text-align: center;
+}
+
+.text-gradient {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.submission-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item span {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.submit-body {
+    padding: 2rem;
+}
+
+.info-box {
+    background: #f8faff;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.info-box i {
+    font-size: 1.5rem;
+    color: #2b44ff;
+}
+
+.upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.upload-field {
+    position: relative;
+}
+
+.upload-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.upload-label i {
+    margin-right: 0.5rem;
+}
+
+.help-text {
+    display: block;
+    color: #718096;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.field-error {
+    color: #ff4b4b;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.submit-button {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    .submit-card {
+        margin: 1rem;
+    }
+    .text-gradient {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

@@ -3,99 +3,287 @@
 
 {% block content %}
 
-<div id="ide-icon" class="position-fixed" style="top: 50%; right: -50px; transform: translateY(-50%); transition: right 0.3s; z-index: 1000;">
-    <button class="btn btn-success" onclick="toggleIde()">
-        <img src="/media/ide.png" alt="IDE Icon" style="height: 50px;">
-    </button>
-</div>
-
-<div id="ide-popup" class="position-fixed bg-light" style="top: 0; right: -500px; width: 500px; height: 100%; transition: right 0.3s; box-shadow: -2px 0 5px rgba(0,0,0,0.1); z-index: 100; border: 1px solid #28a745;">
-    <div class="p-3">
-        <h3 class="text-success">Python IDE</h3>
-        <div id="editor" style="height: 300px; border: 1px solid #28a745;"></div>
-        <div class="mt-2 d-flex justify-content-between">
-            <button class="btn btn-success" onclick="runCode()">Run Code</button>
-            <div class="dropdown">
-                <button class="btn btn-outline-success dropdown-toggle" type="button" id="datasetDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Select Dataset
-                </button>
-            </div>
-            <button class="btn btn-outline-success" onclick="">Upload Dataset</button>
+<div class="dashboard-container">
+    <div class="container py-5">
+        <div id="ide-icon" class="position-fixed" style="top: 50%; right: -50px; transform: translateY(-50%); transition: right 0.3s; z-index: 1000;">
+            <button class="btn btn-gradient" onclick="toggleIde()">
+                <img src="/media/ide.png" alt="IDE Icon" style="height: 50px;">
+            </button>
         </div>
-        <pre id="output" class="mt-3 bg-light text-success p-2" style="border: 1px solid #28a745;"></pre>
-    </div>
-</div>
 
-<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel">Upload Dataset</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="uploadForm">
-                    <div class="form-group">
-                        <label for="datasetName">Dataset Name</label>
-                        <input type="text" class="form-control" id="datasetName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="datasetFile">File</label>
-                        <input type="file" class="form-control-file" id="datasetFile" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-success" onclick="uploadDataset()">Upload</button>
+        <div id="ide-popup" class="ide-popup">
+            <div class="p-4">
+                <h3 class="text-gradient mb-4">
+                    <i class="fas fa-code me-2"></i>
+                    Python IDE
+                </h3>
+                <div id="editor" class="editor-container"></div>
+                <div class="mt-4 d-flex justify-content-between">
+                    <button class="btn btn-gradient" onclick="runCode()">
+                        <i class="fas fa-play me-2"></i>
+                        Kodu Çalıştır
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="toggleIde()">
+                        <i class="fas fa-times me-2"></i>
+                        Kapat
+                    </button>
+                </div>
+                <pre id="output" class="output-container mt-3"></pre>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="container mt-5">
-    <h2 class="text-success mb-4">{{ exam.title }}</h2>
-    <div id="timer" class="mb-4"></div>
-    <form id="exam-form" method="post" class="needs-validation" novalidate>
-        {% csrf_token %}
-        {% for question in questions %}
-        <div class="card mb-4 shadow-sm border-success rounded">
-            <div class="card-body">
-                <h4 class="card-title">Question {{ forloop.counter }}</h4>
-                <div class="form-group mb-4">
-                    <label class="text-success"><strong>{{ question.text }}</strong></label>
-                    
+        <div class="text-center mb-5" data-aos="fade-down">
+            <h1 class="text-gradient">{{ exam.title }}</h1>
+            <div id="timer" class="timer-badge"></div>
+        </div>
+
+        <form id="exam-form" method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            {% for question in questions %}
+            <div class="question-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}">
+                <div class="question-header">
+                    <div class="question-number">
+                        <span>{{ forloop.counter }}</span>
+                    </div>
+                    <h4>Soru {{ forloop.counter }}</h4>
                 </div>
 
-                <div class="form-group mb-4">
+                <div class="question-body">
+                    <div class="question-text mb-4">
+                        {{ question.text }}
+                    </div>
+
                     {% if question.image %}
-                        <img src="{{ question.image.url }}" alt="Question Image" class="img-fluid mt-3 mb-3">
+                    <div class="question-image mb-4">
+                        <img src="{{ question.image.url }}" alt="Soru Görseli" class="img-fluid rounded">
+                    </div>
                     {% endif %}
-                    
-                </div>
 
-                <h5 class="mb-3 text-success">Answers for Question {{ forloop.counter }}</h5>
-                {% for answer in question.answers.all %}
-                <div class="form-group mb-3">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" id="answer_{{ answer.id }}" required>
+                    <div class="answers-section">
+                        <h5 class="answers-title">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Cevap Seçenekleri
+                        </h5>
+                        {% for answer in question.answers.all %}
+                        <div class="answer-item">
+                            <div class="custom-radio">
+                                <input type="radio" 
+                                       class="form-check-input" 
+                                       name="question_{{ question.id }}" 
+                                       value="{{ answer.id }}" 
+                                       id="answer_{{ answer.id }}" 
+                                       required>
+                                <label class="form-check-label" for="answer_{{ answer.id }}">
+                                    {{ answer.text }}
+                                </label>
                             </div>
                         </div>
-                        <label class="form-check-label form-control" for="answer_{{ answer.id }}">{{ answer.text }}</label>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-        {% endfor %}
+            {% endfor %}
 
-        <button type="submit" class="btn btn-success btn-lg btn-block mt-4 mb-5">Submit Exam</button>
-    </form>
+            <div class="submit-section" data-aos="fade-up">
+                <button type="submit" class="submit-button">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Sınavı Bitir
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<style>
+.dashboard-container {
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 2.5rem;
+}
+
+.timer-badge {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.ide-popup {
+    position: fixed;
+    top: 0;
+    right: -500px;
+    width: 500px;
+    height: 100%;
+    background: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    border-left: 3px solid #2ecc71;
+}
+
+.editor-container {
+    height: 300px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.output-container {
+    background: #f8faff;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.question-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+}
+
+.question-card:hover {
+    transform: translateY(-5px);
+}
+
+.question-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.question-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.question-text {
+    font-size: 1.1rem;
+    color: #2d3748;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.question-image img {
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.answers-section {
+    background: #f8faff;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.answers-title {
+    font-size: 1.1rem;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+}
+
+.answer-item {
+    margin-bottom: 1rem;
+}
+
+.custom-radio {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.custom-radio:hover {
+    border-color: #2ecc71;
+    background: rgba(46, 204, 113, 0.02);
+}
+
+.custom-radio input[type="radio"] {
+    margin-right: 1rem;
+}
+
+.submit-section {
+    text-align: center;
+    margin: 3rem 0;
+}
+
+.submit-button {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 200px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+}
+
+.btn-gradient {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+}
+
+@media (max-width: 768px) {
+    .ide-popup {
+        width: 100%;
+    }
+    
+    .question-card {
+        padding: 1.5rem;
+    }
+    
+    .submit-button {
+        width: 100%;
+    }
+}
+</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ext-language_tools.min.js"></script>
 <script>

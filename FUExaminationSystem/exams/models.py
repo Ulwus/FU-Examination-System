@@ -8,21 +8,21 @@ from users.models import User
 class Exam(models.Model):
     instructor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_exams')
     title = models.CharField(max_length=255)
-    description = models.TextField()
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    duration = models.IntegerField(help_text="Sınav süresi dakika cinsinden")
-    total_marks = models.PositiveIntegerField()
-    passing_marks = models.PositiveIntegerField()
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(default=60)
+    total_marks = models.PositiveIntegerField(default=100)
+    passing_marks = models.PositiveIntegerField(default=50)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     predefined_vars = models.TextField(blank=True, null=True)
 
-
-    def __str__(self):
-        return f"{self.course.code} - {self.title}"
-    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Sınav"
+        verbose_name_plural = "Sınavlar"
 
 
 class QuestionType(models.Model):
@@ -56,17 +56,16 @@ class Answer(models.Model):
 class Submission(models.Model):
     exam = models.ForeignKey(Exam, related_name='submissions', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='submissions', on_delete=models.CASCADE)
-    start_time = models.DateTimeField()
+    start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
     score = models.FloatField(default=0)
     is_graded = models.BooleanField(default=False)
     is_submitted = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.exam.title}"
-
-    def is_time_up(self):
-        return timezone.now() > self.start_time + timedelta(minutes=self.exam.duration)
+    class Meta:
+        ordering = ['-start_time']
+        verbose_name = "Sınav Gönderimi"
+        verbose_name_plural = "Sınav Gönderimleri"
 
 class StudentAnswer(models.Model):
     submission = models.ForeignKey(Submission, related_name='student_answers', on_delete=models.CASCADE)
@@ -75,14 +74,16 @@ class StudentAnswer(models.Model):
     text_answer = models.TextField(null=True, blank=True)
     marks_obtained = models.FloatField(null=True, blank=True)
 
-    def __str__(self):
-        return f"Answer by {self.submission.user.username} for Question {self.question.id}"
+    class Meta:
+        verbose_name = "Öğrenci Cevabı"
+        verbose_name_plural = "Öğrenci Cevapları"
     
 class TempSubmission(models.Model):
     submission = models.OneToOneField(Submission, on_delete=models.CASCADE, related_name='temp_submission')
     temp_answers = models.JSONField(default=dict)
     last_updated = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Temp Submission for {self.submission}"
+    class Meta:
+        verbose_name = "Geçici Gönderim"
+        verbose_name_plural = "Geçici Gönderimleri"
 

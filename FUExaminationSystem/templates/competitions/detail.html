@@ -1,0 +1,304 @@
+
+    {% extends "base_generic.html" %}
+    {% block title %}{{ competition.title }}{% endblock %}
+    {% block content %}
+    <div class="competition-detail">
+        <div class="hero-section">
+            <div class="container">
+                <h1 class="display-4 text-center mb-3">{{ competition.title }}</h1>
+                <p class="lead text-center">{{ competition.description }}</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <span>{{ competition.get_participant_count }}</span>
+                        <label>Katılımcı</label>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ competition.end_date|timeuntil }}</span>
+                        <label>Kalan Süre</label>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-upload"></i>
+                        <span>{{ competition.max_submissions_per_day }}</span>
+                        <label>Günlük Hak</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="container mt-5">
+            <div class="row">
+                {% if is_participant %}
+                <div class="col-md-4 mb-4">
+                    <div class="participant-card">
+                        <h3><i class="fas fa-rocket"></i> Yarışmacı Paneli</h3>
+                        <div class="participant-stats">
+                            <div class="stat-row">
+                                <span>Kalan Deneme:</span>
+                                <strong>{{ remaining_submissions }}</strong>
+                            </div>
+                            {% if best_submission %}
+                            <div class="stat-row">
+                                <span>En İyi F1 Skor:</span>
+                                <strong>{{ best_submission.f1_score|floatformat:4 }}</strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="action-buttons">
+                            <a href="{% url 'download_training_dataset' competition.id %}" class="btn btn-primary">
+                                <i class="fas fa-download"></i> Training Dataset
+                            </a>
+                            <a href="{% url 'submit_model' competition.id %}" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Model Yükle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+    
+                <div class="col-md-{% if is_participant %}8{% else %}12{% endif %}">
+                    <div class="leaderboard-card">
+                        <h3><i class="fas fa-trophy"></i> Liderlik Tablosu</h3>
+                        <div class="chart-container">
+                            <canvas id="leaderboardChart"></canvas>
+                        </div>
+                        <div class="table-responsive mt-4">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Katılımcı</th>
+                                        <th>F1 Skoru</th>
+                                        <th>Doğruluk</th>
+                                        <th>Kesinlik</th>
+                                        <th>Hatırlama</th>
+                                        <th>Tarih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in leaderboard.submissions %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ submission.participant.username }}</td>
+                                        <td>{{ submission.f1_score|floatformat:4 }}</td>
+                                        <td>{{ submission.accuracy|floatformat:4 }}</td>
+                                        <td>{{ submission.precision|floatformat:4 }}</td>
+                                        <td>{{ submission.recall|floatformat:4 }}</td>
+                                        <td>{{ submission.submitted_at|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    .competition-detail {
+        background: #f8f9fa;
+        min-height: 100vh;
+    }
+    
+    .hero-section {
+        background: linear-gradient(45deg, #2b44ff, #3366ff);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+        border-radius: 20px;
+    }
+    
+    .hero-section h1 {
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .stat-card i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card span {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .stat-card label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .participant-card, .leaderboard-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .participant-card h3, .leaderboard-card h3 {
+        margin-bottom: 1.5rem;
+        color: #2b44ff;
+    }
+    
+    .participant-stats {
+        margin: 1.5rem 0;
+    }
+    
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .action-buttons {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #2b44ff, #3366ff);
+        border: none;
+    }
+    
+    .btn-success {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        border: none;
+    }
+    
+    .chart-container {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: #f8faff;
+        border-radius: 10px;
+    }
+    
+    .table {
+        margin-top: 1rem;
+    }
+    
+    .table th {
+        background: #f8faff;
+        color: #2b44ff;
+        font-weight: 600;
+        border: none;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border: none;
+    }
+    
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .table tbody tr:hover {
+        background: #f8faff;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('leaderboardChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['F1 Score', 'Doğruluk', 'Kesinlik', 'Hatırlama'],
+                    datasets: [{
+                        label: 'En İyi Skorlar',
+                        data: [
+                        {{ leaderboard.best_scores.f1_score.f1_score|floatformat:4 }},
+                        {{ leaderboard.best_scores.accuracy.accuracy|floatformat:4 }},
+                        {{ leaderboard.best_scores.precision.precision|floatformat:4 }},
+                        {{ leaderboard.best_scores.recall.recall|floatformat:4 }}
+                        ],
+                        backgroundColor: [
+                            'rgba(43, 68, 255, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(153, 102, 255, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(43, 68, 255, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(4);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const labels = {
+                                        0: "{{ leaderboard.best_scores.f1_score.participant.username }}",
+                                        1: "{{ leaderboard.best_scores.accuracy.participant.username }}",
+                                        2: "{{ leaderboard.best_scores.precision.participant.username }}",
+                                        3: "{{ leaderboard.best_scores.recall.participant.username }}"
+                                    };
+                                    return `${labels[context.dataIndex]}: ${context.formattedValue}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    
+    
+    </script>
+    {% endblock %}

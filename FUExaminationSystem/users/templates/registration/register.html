@@ -1,53 +1,237 @@
 {% extends 'base_generic.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Kayıt Ol{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title text-center mb-4 ">Register</h2>
-                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            {{ form.username.label_tag }}
-                            {% render_field form.username class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.email.label_tag }}
-                            {% render_field form.email class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.password1.label_tag }}
-                            {% render_field form.password1 class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.password2.label_tag }}
-                            {% render_field form.password2 class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.profile_picture.label_tag }}
-                            {% render_field form.profile_picture class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.bio.label_tag }}
-                            {% render_field form.bio class="form-control" %}
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-success">Register</button>
-                        </div>
+<div class="register-container">
+    <div class="register-card" data-aos="fade-up">
+        <div class="logo-section">
+            <i class="fas fa-user-plus"></i>
+            <h1 class="text-gradient">Yeni Hesap Oluştur</h1>
+            <p class="text-muted">FU Examination platformuna hoş geldiniz</p>
+        </div>
 
-                        
-                    </form>
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    {% render_field form.username class="form-control" placeholder="Kullanıcı Adı" %}
                 </div>
             </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    {% render_field form.email class="form-control" placeholder="Email Adresi" %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {% render_field form.password1 class="form-control" placeholder="Şifre" %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {% render_field form.password2 class="form-control" placeholder="Şifre (Tekrar)" %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="profile-upload">
+                    <label for="{{ form.profile_picture.id_for_label }}" class="upload-label">
+                        <i class="fas fa-camera"></i>
+                        <span>Profil Fotoğrafı Seç</span>
+                    </label>
+                    {% render_field form.profile_picture class="form-control" %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-edit"></i>
+                    </span>
+                    {% render_field form.bio class="form-control" placeholder="Kendinizi kısaca tanıtın..." %}
+                </div>
+            </div>
+
+            <button type="submit" class="register-button">
+                <i class="fas fa-user-plus me-2"></i>
+                Kayıt Ol
+            </button>
+        </form>
+
+        <div class="login-link">
+            Zaten hesabınız var mı? <a href="{% url 'login' %}">Giriş Yap</a>
         </div>
     </div>
 </div>
+
+<style>
+.register-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.register-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo-section i {
+    font-size: 3rem;
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+    border-color: #2b44ff;
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
+}
+
+.input-group-text {
+    background: #f8faff;
+    border: none;
+    color: #2b44ff;
+    padding: 0.75rem 1rem;
+}
+
+.form-control {
+    border: none;
+    padding: 0.75rem;
+    box-shadow: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+}
+
+.profile-upload {
+    text-align: center;
+}
+
+.upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    border-color: #2b44ff;
+    background: rgba(43, 68, 255, 0.02);
+}
+
+.upload-label i {
+    font-size: 1.5rem;
+    color: #2b44ff;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.register-button {
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 12px;
+    width: 100%;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.register-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+.login-link {
+    text-align: center;
+    color: #718096;
+}
+
+.login-link a {
+    color: #2b44ff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .register-card {
+        padding: 2rem;
+    }
+    
+    .text-gradient {
+        font-size: 1.75rem;
+    }
+}
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

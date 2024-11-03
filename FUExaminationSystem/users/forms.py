@@ -12,12 +12,23 @@ class CustomUserCreationForm(UserCreationForm):
         user.is_student = True
         if commit:
             user.save()
-
-            # Create related profile based on user type
+            
+            import uuid
+            student_id = str(uuid.uuid4().hex)[:8]  
+            
             if user.is_student:
-                StudentProfile.objects.create(user=user)
+                StudentProfile.objects.create(
+                    user=user,
+                    student_id=f"ST{student_id}",  
+                    department=""
+                )
             elif user.is_instructor:
-                InstructorProfile.objects.create(user=user)
+                InstructorProfile.objects.create(
+                    user=user,
+                    employee_id=f"INS{student_id}",  
+                    department="",
+                    specialization=""
+                )
 
         return user
 

@@ -1,0 +1,230 @@
+{% extends 'base_generic.html' %}
+{% block content %}
+
+<style>
+.join-container {
+    min-height: 30vh;
+    padding: 3rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kahoot-card {
+    box-sizing: content-box;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kahoot-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+}
+
+.kahoot-card-header {
+    margin-bottom: 2.5rem;
+}
+
+.kahoot-card-header h1 {
+    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.info-section {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.info-item {
+    background: rgba(43, 68, 255, 0.05);
+    padding: 1rem;
+    border-radius: 12px;
+}
+
+.info-item i {
+    color: #2b44ff;
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.info-item h3 {
+    font-size: 1rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+    color: #718096;
+    margin: 0;
+}
+
+.pin-input {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5rem;
+    text-align: center;
+    padding: 1rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.pin-input:focus {
+    border-color: #2b44ff;
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
+    outline: none;
+}
+
+.join-btn {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.join-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+.error-message {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.help-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.help-section h4 {
+    color: #2d3748;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.help-steps {
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.step-number {
+    background: #2b44ff;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-text {
+    color: #718096;
+    font-size: 0.9rem;
+}
+</style>
+
+<div class="join-container">
+    <div class="kahoot-card">
+        <div class="kahoot-card-header">
+            <h1>Yarışmaya Katıl</h1>
+            <p class="text-muted">Eğitmeninizden aldığınız 6 haneli PIN kodunu girin</p>
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <h3><i class="fas fa-trophy"></i> Rekabet</h3>
+                <p>Diğer öğrencilerle yarışın ve sıralamanızı görün</p>
+            </div>
+            <div class="info-item">
+                <h3><i class="fas fa-brain"></i> Öğrenme</h3>
+                <p>Gerçek dünya problemleri üzerinde çalışın</p>
+            </div>
+            <div class="info-item">
+                <h3><i class="fas fa-chart-line"></i> Gelişim</h3>
+                <p>Model performansınızı sürekli iyileştirin</p>
+            </div>
+            <div class="info-item">
+                <h3><i class="fas fa-medal"></i> Başarı</h3>
+                <p>Başarılarınızla profilinizi zenginleştirin</p>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="pin_code" class="pin-input" placeholder="PIN KODU" maxlength="6" autocomplete="off" required>
+            <button type="submit" class="join-btn">
+                <i class="fas fa-play me-2"></i> Yarışmaya Katıl
+            </button>
+            {% if error %}
+            <div class="error-message show">{{ error }}</div>
+            {% endif %}
+        </form>
+
+        <div class="help-section">
+            <h4><i class="fas fa-question-circle me-2"></i>Nasıl Katılırım?</h4>
+            <div class="help-steps">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Eğitmeninizden yarışma PIN kodunu alın</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-text">PIN kodunu yukarıdaki alana girin</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-text">"Yarışmaya Katıl" butonuna tıklayın</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-text">Yarışma detaylarını inceleyin ve modelinizi yükleyin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

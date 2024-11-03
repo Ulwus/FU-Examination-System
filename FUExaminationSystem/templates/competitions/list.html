@@ -1,0 +1,163 @@
+{% extends "base_generic.html" %}
+{% block title %}Yarışmalar{% endblock %}
+{% block content %}
+<style>
+.dashboard-container {
+    min-height: 100vh;
+    padding: 3rem 0;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+}
+
+.badge.bg-secondary {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.stat-icon i {
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.text-muted {
+    color: #718096 !important;
+}
+
+[data-aos] {
+    transition-duration: 800ms !important;
+}
+</style>
+
+<div class="dashboard-container">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-down">
+            <h1 class="text-gradient display-4 mb-3">Aktif Yarışmalar</h1>
+            {% if user.is_instructor %}
+            <div class="mt-4">
+                <a href="{% url 'create_competition' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i> Yeni Yarışma Oluştur
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row g-4">
+            {% for competition in competitions %}
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="badge {% if competition.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="fas {% if competition.is_active %}fa-check-circle{% else %}fa-times-circle{% endif %} me-2"></i>
+                            {{ competition.is_active|yesno:'Aktif,Pasif' }}
+                        </span>
+                    </div>
+                    
+                    <h4>{{ competition.title }}</h4>
+                    <p class="text-muted mb-4">{{ competition.description|truncatewords:30 }}</p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-4 text-center">
+                            <div class="stat-icon bg-primary bg-opacity-10 mx-auto mb-2">
+                                <i class="fas fa-users text-primary"></i>
+                            </div>
+                            <small class="d-block text-muted">{{ competition.get_participant_count }} katılımcı</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="stat-icon bg-success bg-opacity-10 mx-auto mb-2">
+                                <i class="fas fa-redo-alt text-success"></i>
+                            </div>
+                            <small class="d-block text-muted">{{ competition.max_submissions_per_day }} hak/gün</small>
+                        </div>
+                        
+                        <div class="col-4 text-center">
+                            <div class="stat-icon bg-info bg-opacity-10 mx-auto mb-2">
+                                <i class="fas fa-key text-info"></i>
+                            </div>
+                            
+                            <small class="d-block text-muted">PIN: 
+                                {% if user.is_instructor %}
+                                {{ competition.pin_code }}
+                                {% else %}
+                                ******
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% url 'competition_detail' competition.id %}" class="btn btn-primary">
+                            <i class="fas fa-eye me-2"></i> Detayları Gör
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

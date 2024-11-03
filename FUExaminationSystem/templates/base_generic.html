@@ -4,329 +4,245 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FU Examination System{% endblock %}</title>
-    
-    <!-- Bootstrap CSS for modern UI components -->
+    <link rel="icon" type="image/x-icon" href="media/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-
-        #ide-icon {
-            position: fixed;
-            top: 50%;
-            right: 0; 
-            transform: translateY(-50%);
-            transition: right 0.3s;
-            z-index: 1000;
-        }
-
         :root {
-            --primary-color: #2ecc71;
-            --secondary-color: #27ae60;
-            --background-color: #f8f9fa;
-            --text-color: #2c3e50;
-            --border-color: #ddd;
+            --primary-color: #2b44ff;
+            --secondary-color: #3366ff;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --light-bg: #f8faff;
+            --dark-text: #2d3748;
+            --light-text: #718096;
+            --border-color: #e2e8f0;
         }
 
         body {
-            font-family: 'Roboto', sans-serif;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(135deg, #f6f8ff 0%, #f1f5fe 100%);
+
+            font-family: 'Montserrat', sans-serif;
+           color: var(--dark-text);
+            min-height: 100vh;
         }
 
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        .navbar {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
 
         .navbar-brand {
-            font-weight: bold;
-            font-size: 1.75rem;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white !important;
         }
 
         .nav-link {
-            color: white !important;
-            font-weight: bold;
-            transition: color 0.3s ease;
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
 
         .nav-link:hover {
-            color: var(--secondary-color) !important;
+            color: white !important;
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
         }
 
-        main {
-            margin-top: 20px;
+        .main-container {
+            padding: 2rem;
+            margin-bottom: 6rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .messages {
             position: fixed;
-            top: 1rem;
-            right: 1rem;
+            top: 2rem;
+            right: 2rem;
             z-index: 1050;
-            max-width: 300px;
+            min-width: 300px;
         }
 
         .alert {
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-        }
-
-        .btn-custom {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            background-color: var(--primary-color);
-        }
-
-        .card {
-         
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-
-        .cards {
-            justify-content: center;
-            align-items: center;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease;
         }
 
         footer {
-            margin-top: 2rem;  
-            background-color: var(--primary-color);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
             color: white;
-            text-align: center;
-            padding: 1rem 0;
+            padding: 1.5rem 0;
             position: fixed;
             bottom: 0;
             width: 100%;
+            text-align: center;
+            z-index: 1000;
         }
 
-        .containerMain {
-            margin-bottom: 10rem;
-        }
-        
-        .profile-img {
-            width: 23.375rem;
-            height: 23.375rem;
-            object-fit: cover; /* Resmin doğru şekilde kesilmesini sağlar */
-        }
-
-        .card {
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-1px);
-        }
-        .badge {
-            font-size: 0.8rem;
-            padding: 0.3em 0.6em;
-        }
-        .btn-sm {
-            font-size: 0.8rem;
-            padding: 0.25rem 0.5rem;
-        }
-        .card-title {
-            color: #2c3e50;
-            font-weight: bold;
-        }
-        .text-muted {
-            color: #7f8c8d !important;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
-        .form-label {
-            font-weight: bold;
+        #ide-icon {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            z-index: 1000;
+            transition: right 0.3s ease;
         }
 
-        .form-control, .form-check-input {
-            border-radius: 5px;
-            border-color: var(--border-color);
+        .gradient-text {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .form-control:focus, .form-check-input:focus {
-            box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
-        }
-
-        .custom-green-bg {
-            background-color: #e9f5e9; /* Açık yeşil arka plan rengi */
-        }
-        .custom-green-border {
-            border-color: #a2d5a3; /* Yeşil sınır rengi */
-        }
-        .custom-green-text {
-            color: #3c763d; /* Yeşil metin rengi */
-        }
-        .card {
-            border: 1px solid #a2d5a3; /* Yeşil sınır rengi */
-            border-radius: 1.45rem; /* Köşe yuvarlama */
-        }
-        .card-header {
-            background-color: #a2d5a3; /* Kart başlığı arka plan rengi */
-           
-            color: white; /* Kart başlığı metin rengi */
-        }
-
-
-        .exam-list-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .exam-category {
-            margin-bottom: 2rem;
-        }
-        .exam-category h2 {
-            color: #343a40;
-            padding-bottom: 0.5rem;
-            margin-bottom: 2rem;
-        }
-        .exam-card {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0px 3px 6px 2px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1rem;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .exam-card:hover {
-            transform: translateY(-2px);
-        }
-        .exam-card-header {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .exam-card-body {
-            padding: 1rem;
-        }
-        .exam-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-        .exam-detail-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0.5rem;
-        }
-        .exam-detail-label {
-            font-size: 0.75rem;
-            color: #6c757d;
-            margin-bottom: 0.25rem;
-        }
-        .exam-detail-value {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #28a745;
-        }
-        .exam-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-outline-primary {
-            color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .btn-warning {
-            background-color: #ffc107;
-            border-color: #ffc107;
-        }
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.25em 0.5em;
-            border-radius: 0.25rem;
-        }
-        
     </style>
 </head>
-<body style="z-index:999">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark">
-            <div class="container">
-                <a class="navbar-brand" href="{% url 'exam_list' %}">FU Examination System</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        
-                        {% if user.is_authenticated %}
-
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-graduation-cap"></i> FU Examination
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'exam_list' %}">Exams</a>
+                            <a class="nav-link" href="{% url 'exam_list' %}">
+                                <i class="fas fa-book"></i> Sınavlar
+                            </a>
                         </li>
-                        
-                            {% if user.is_admin or user.is_instructor %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'create_exam' %}">Create Exam</a>
-                                </li>
-                            {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'competition_list' %}">
+                                <i class="fas fa-trophy"></i> Yarışmalar
+                            </a>
+
+                            
+                        </li>
+                        {% if user.is_instructor or user.is_admin %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'user_profile' %}">Profile</a>
+                                <a class="nav-link" href="{% url 'create_exam' %}">
+                                    <i class="fas fa-plus-circle"></i> Sınav Oluştur
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                                <a class="nav-link" href="{% url 'create_competition' %}">
+                                    <i class="fas fa-flag-checkered"></i> Yarışma Oluştur
+                                </a>
                             </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'join_competition' %}"><i class="fas fa-plus-circle"></i> Yarışmaya Katıl</a>
+                            </li>      
                         {% endif %}
-                    </ul>
-                </div>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'user_profile' %}">
+                                <i class="fas fa-user"></i> Profil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Çıkış
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+
     {% if messages %}
         <div class="messages">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
-    <main class="containerMain" style="z-index:1">
+
+    <div class="main-container">
         {% block content %}
         {% endblock %}
-    </main>
+    </div>
 
-   
-
-    <footer style="z-index:1000">
-        <div class="containers">
-            <p>&copy; 2024 FU Examination System. All rights reserved.</p>
+    <footer>
+        <div class="container">
+            <p class="mb-0">&copy; 2024 FU Examination System. Tüm hakları saklıdır.</p>
         </div>
     </footer>
 
-    <!-- Bootstrap JS for enhanced interactivity -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out',
+                once: true
+            });
+        });
+    </script>
 </body>
 </html>

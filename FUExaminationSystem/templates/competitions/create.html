@@ -1,0 +1,153 @@
+{% extends "base_generic.html" %}
+{% block title %}Yarışma Oluştur{% endblock %}
+{% block content %}
+<div class="create-competition-container">
+    <div class="create-form-card">
+        <div class="form-header">
+            <h1 class="text-gradient">Yeni Yarışma Oluştur</h1>
+            <p class="lead">Yarışma detaylarını doldurun</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert-banner">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="animated-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="field-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <div class="help-text">
+                    <i class="fas fa-info-circle"></i>
+                    {{ field.help_text }}
+                </div>
+                {% endif %}
+                {% if field.errors %}
+                <div class="field-error">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="create-button">
+                <i class="fas fa-rocket"></i> Yarışmayı Başlat
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+.create-competition-container {
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.create-form-card {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.animated-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    animation: slideIn 0.5s ease;
+}
+
+.field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #2b44ff;
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.2);
+    outline: none;
+}
+
+.help-text {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-top: 0.5rem;
+}
+
+.field-error {
+    color: #ff4b4b;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.create-button {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.create-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .create-form-card {
+        margin: 1rem;
+    }
+}
+</style>
+{% endblock %}

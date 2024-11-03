@@ -1,44 +1,184 @@
 {% extends 'base_generic.html' %}
 {% load static %}
-
-{% block title %}Edit Profile{% endblock %}
-
+{% block title %}Profili Düzenle{% endblock %}
 {% block content %}
-<div class="container">
-    <h2 class="my-4">Edit Profile</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" class="card-img-top rounded-circle" alt="Profile Picture">
-                    <div class="card-body text-center">
-                        <label for="profile_picture" class="btn btn-secondary">Change Picture</label>
-                        <input type="file" id="profile_picture" name="profile_picture" class="d-none">
+<div class="edit-profile-container">
+    <div class="edit-header">
+        <h1 class="text-gradient">Profili Düzenle</h1>
+    </div>
+    
+    <div class="edit-content">
+        <form method="post" enctype="multipart/form-data" class="edit-form">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="image-card" data-aos="fade-right">
+                        <div class="current-image">
+                            <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}/media/default_profile.png{% endif %}" alt="Profile Picture">
+                        </div>
+                        <div class="image-upload">
+                            <label for="profile_picture">
+                                <i class="fas fa-camera"></i>
+                                <span>Fotoğrafı Değiştir</span>
+                            </label>
+                            <input type="file" id="profile_picture" name="profile_picture" class="d-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="form-card" data-aos="fade-left">
+                        <h3><i class="fas fa-user-edit"></i> Kişisel Bilgiler</h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="username">
+                                    <i class="fas fa-user"></i>
+                                    Kullanıcı Adı
+                                </label>
+                                <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">
+                                    <i class="fas fa-envelope"></i>
+                                    Email
+                                </label>
+                                <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="bio">
+                                    <i class="fas fa-comment-alt"></i>
+                                    Hakkımda
+                                </label>
+                                <textarea id="bio" name="bio" class="form-control" rows="4">{{ user.bio }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="save-button">
+                            <i class="fas fa-save"></i> Değişiklikleri Kaydet
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Personal Information</h5>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="bio" class="form-label">Bio</label>
-                            <textarea id="bio" name="bio" class="form-control" rows="4">{{ user.bio }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-custom">Save Changes</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<style>
+.edit-profile-container {
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.edit-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 2.5rem;
+}
+
+.image-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+    text-align: center;
+}
+
+.current-image img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 2rem;
+    border: 4px solid #2b44ff;
+}
+
+.image-upload label {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.image-upload label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+.form-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #2b44ff;
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.2);
+    outline: none;
+}
+
+.save-button {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    .image-card {
+        margin-bottom: 2rem;
+    }
+}
+</style>
 {% endblock %}

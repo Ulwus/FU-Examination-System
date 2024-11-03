@@ -1,26 +1,148 @@
 {% extends 'base_generic.html' %}
-
-{% block title %}Grade Exam{% endblock %}
-
+{% block title %}Sınav Değerlendirme - {{ exam.title }}{% endblock %}
 {% block content %}
-
-
-<div class="container mt-5">
-    <h2>Grade Exam - {{ submission.exam.title }}</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <p><strong>Description:</strong> {{ submission.exam.description }}</p>
-            <p><strong>Start Time:</strong> {{ submission.exam.start_time }}</p>
-            <p><strong>End Time:</strong> {{ submission.exam.end_time }}</p>
-            <p><strong>Duration:</strong> {{ submission.exam.duration }} minutes</p>
-            <p><strong>Total Marks:</strong> {{ submission.exam.total_marks }}</p>
-            <p><strong>Passing Marks:</strong> {{ submission.exam.passing_marks }}</p>
-            <p><strong>Students Taken:</strong> {{ submission_count }}</p>
+<div class="grading-container">
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="text-gradient">{{ exam.title }}</h1>
+            <p class="lead">Sınav Değerlendirme Paneli</p>
         </div>
     </div>
-    <form method="post">
-        {% csrf_token %}
-        <input type="submit" name="finish_exam" value="Finish Exam" class="btn btn-danger">
-    </form>
+    <div class="container">
+        
+        <div class="submissions-section mt-4">
+            <h3><i class="fas fa-users"></i> Tüm Katılımcılar</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Öğrenci</th>
+                            <th>Başlangıç</th>
+                            <th>Bitiş</th>
+                            <th>Puan</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                        <tr>
+                            <td>{{ submission.user.username }}</td>
+                            <td>{{ submission.start_time|date:"H:i d/m/Y" }}</td>
+                            <td>{{ submission.end_time|date:"H:i d/m/Y"|default:"-" }}</td>
+                            <td>
+                                {% if submission.is_graded %}
+                                    <span class="badge bg-success">{{ submission.score|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Beklemede</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if submission.is_graded %}
+                                    <span class="badge bg-success">Tamamlandı</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Değerlendiriliyor</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form method="post" class="finish-form mt-4">
+            {% csrf_token %}
+            {% if not submission.is_graded %}
+                <button type="submit" name="finish_exam" class="finish-button">
+                    <i class="fas fa-check-circle"></i> Sınavı Sonlandır ve Notlandır
+                </button>
+            {%endif%}    
+        </form>
+    </div>
 </div>
+
+<style>
+.grading-container {
+    min-height: 100vh;
+}
+
+.hero-section {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: #2b44ff;
+    margin-bottom: 1rem;
+}
+
+.stat-card span {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.exam-timeline {
+    margin: 3rem 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.timeline-item i {
+    font-size: 2rem;
+    color: #2b44ff;
+}
+
+.finish-button {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.finish-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+</style>
 {% endblock %}

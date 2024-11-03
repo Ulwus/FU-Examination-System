@@ -1,0 +1,84 @@
+{% extends 'base_generic.html' %}
+{% block title %}500 - Sunucu Hatası{% endblock %}
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-content" data-aos="fade-up" data-aos-duration="1000">
+            <div class="error-title" data-aos="zoom-in">500</div>
+            <h2 class="error-subtitle" data-aos="fade-up" data-aos-delay="100">Sunucu Hatası</h2>
+            <p class="error-description" data-aos="fade-up" data-aos-delay="200">
+                Sunucumuz şu an mola verdi. Kahvesini içip hemen dönecek! ☕
+            </p>
+            <img src="/media/errors/500.svg" alt="500" class="error-image" data-aos="fade-up" data-aos-delay="300">
+            <div data-aos="fade-up" data-aos-delay="400">
+                <a href="{% url 'dashboard' %}" class="error-button">
+                    <i class="fas fa-redo me-2"></i>Yeniden Dene
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .error-page {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--light-bg);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .error-container {
+        text-align: center;
+        padding: 2rem;
+        max-width: 800px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .error-title {
+        font-size: 8rem;
+        font-weight: 800;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+    
+    .error-subtitle {
+        font-size: 2rem;
+        color: var(--dark-text);
+        margin-bottom: 2rem;
+    }
+    
+    .error-description {
+        color: var(--light-text);
+        margin-bottom: 2rem;
+        font-size: 1.2rem;
+    }
+    
+    .error-button {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .error-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        color: white;
+    }
+    
+    .error-image {
+        max-width: 300px;
+        margin: 2rem 0;
+    }
+    </style>
+{% endblock %}

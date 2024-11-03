@@ -1,21 +1,154 @@
 {% extends 'base_generic.html' %}
-{% block title %}Exam Detail{% endblock %}
-
+{% block title %}{{ exam.title }}{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 text-custom">{{ exam.title }}</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <p><strong>Description:</strong> {{ exam.description }}</p>
-            <p><strong>Start Time:</strong> {{ exam.start_time }}</p>
-            <p><strong>End Time:</strong> {{ exam.end_time }}</p>
-            <p><strong>Duration:</strong> {{ exam.duration }} minutes</p>
-            <p><strong>Total Marks:</strong> {{ exam.total_marks }}</p>
-            <p><strong>Passing Marks:</strong> {{ exam.passing_marks }}</p>
+<div class="exam-detail-container">
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4 text-center">{{ exam.title }}</h1>
+            <p class="lead text-center">{{ exam.description }}</p>
+            
+            <div class="exam-stats">
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ exam.duration }}</span>
+                    <small>Dakika</small>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-question-circle"></i>
+                    <span>{{ exam.total_marks }}</span>
+                    <small>Soru</small>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-award"></i>
+                    <span>{{ exam.passing_marks }}</span>
+                    <small>Geçme Notu</small>
+                </div>
+            </div>
         </div>
     </div>
-    {% if request.user.is_student and exam.is_exam_active %}
-        <a href="{% url 'take_exam' exam.pk %}" class="btn btn-primary btn-lg mt-4">Take Exam</a>
-    {% endif %}
+
+    <div class="container mt-5">
+        <div class="exam-timeline">
+            <div class="timeline-item">
+                <i class="fas fa-play-circle"></i>
+                <div class="timeline-content">
+                    <h3>Başlangıç</h3>
+                    <p>{{ exam.start_time|date:"d M Y H:i" }}</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <i class="fas fa-flag-checkered"></i>
+                <div class="timeline-content">
+                    <h3>Bitiş</h3>
+                    <p>{{ exam.end_time|date:"d M Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if request.user.is_student and exam.is_active %}
+        <div class="action-section">
+            <a href="{% url 'exam_list' %}" class="start-exam-btn">
+                <i class="fas fa-rocket"></i> Yönlendir
+            </a>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+.exam-detail-container {
+    min-height: 100vh;
+}
+
+.hero-section {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    padding: 4rem 0;
+    border-radius: 0 0 30px 30px;
+}
+
+.exam-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+}
+
+.stat-card i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card span {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.exam-timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateX(10px);
+}
+
+.timeline-item i {
+    font-size: 2rem;
+    color: #2b44ff;
+}
+
+.action-section {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.start-exam-btn {
+    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.start-exam-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(43, 68, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    .exam-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-item {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
 {% endblock %}

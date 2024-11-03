@@ -30,6 +30,7 @@ def exam_list(request):
                 completed_exams.append(submission.exam_id)
             elif not submission.is_submitted and submission.end_time is None:
                 active_submissions.append(submission.exam_id)
+        
     elif request.user.is_instructor:
         exams = [exam for exam in exams if exam.instructor == request.user]
         active_submissions = None
@@ -39,7 +40,8 @@ def exam_list(request):
     context = {
         'exams': exams,
         'active_submissions': active_submissions,
-        'completed_exams': completed_exams if request.user.is_student else None
+        'completed_exams': completed_exams if request.user.is_student else None,
+        'now': timezone.now()
     }
     return render(request, 'exams/exam_list.html', context)
 
@@ -132,7 +134,9 @@ def create_exam_questions(request, pk):
 def take_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
     completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
-
+    if exam.start_time > timezone.now():
+        messages.warning(request, 'Sınav henüz başlamamıştır!')
+        return redirect('exam_list')
     if exam.id in completed_exams:
         submission = Submission.objects.get(exam=exam, user=request.user)
         return redirect('exam_result', pk=submission.pk)
@@ -156,6 +160,10 @@ def take_exam(request, pk):
     if request.method == 'POST':
         if submission.is_submitted:
             return JsonResponse({'status': 'already_submitted'}, status=400)
+        
+        if 'finish_exam' in request.POST:
+            finish_exam_task.delay(submission.id)
+            return redirect('exam_result', submission_id=submission.id)
 
         if 'save_temp_answers' in request.POST:
             try:
@@ -197,97 +205,78 @@ def take_exam(request, pk):
     })
 
 
-
-
-@login_required
-def student_dashboard(request):
-    student = request.user
-    submissions = Submission.objects.filter(user=student)
-
-    total_exams = submissions.count()
-    completed_exams = 0
-    graded_submissions = []
-    recent_exams = []
-    exam_performance = []
-    upcoming_exams = 0
-
-    for submission in submissions:
-        if submission.is_submitted:
-            completed_exams += 1
-        if submission.is_graded:
-            graded_submissions.append(submission)
-        recent_exams.append(submission)
-
-    upcoming_exams_list = []
-    all_exams = Exam.objects.all()
-    for exam in all_exams:
-        if exam.start_time > timezone.now() and exam.is_active:
-            upcoming_exams_list.append(exam)
-
-    upcoming_exams = len(upcoming_exams_list)
-
-    total_score = 0
-    for submission in graded_submissions:
-        total_score += submission.score
-        exam_performance.append({
-            'name': submission.exam.title,
-            'score': submission.score
-        })
-    
-    average_score = round(total_score / len(graded_submissions), 2) if graded_submissions else 0
-
-    recent_exams = sorted(recent_exams, key=lambda x: x.exam.start_time, reverse=True)[:5]
-
-    context = {
-        'studentData': {
-            'name': student.get_full_name(),
-            'totalExams': total_exams,
-            'completedExams': completed_exams,
-            'upcomingExams': upcoming_exams,
-            'averageScore': average_score,
-            'recentExams': [
-                {
-                    'title': submission.exam.title,
-                    'date': submission.exam.start_time.strftime('%d %b %Y'),
-                    'duration': submission.exam.duration,
-                    'status': 'completed' if submission.is_submitted else 'incomplete'
-                } for submission in recent_exams
-            ],
-            'examPerformance': exam_performance
-        }
-    }
-
-    return render(request, 'users/student_dashboard.html', context)
-
-
 @login_required
 def exam_result(request, pk):
-    submission = get_object_or_404(Submission, pk=pk)
-    if submission.user != request.user and not request.user.is_instructor:
+    """
+    Sınav sonuçlarını görüntülemek için view fonksiyonu.
+    Öğrenciler kendi sonuçlarını, öğretmenler tüm sonuçları görebilir.
+    """
+    try:
+        exam = get_object_or_404(Exam, pk=pk)
+        
+        submissions = Submission.objects.all()
+        user_submission = None
+        
+        for sub in submissions:
+            if sub.exam == exam and sub.user == request.user and sub.is_submitted:
+                user_submission = sub
+                break
+        
+        if not user_submission:
+            messages.error(request, 'Bu sınava ait sonucunuz bulunmamaktadır.')
+            return redirect('exam_list')
+            
+        context = {
+            'submission': user_submission,
+            'exam': exam
+        }
+
+        return render(request, 'exams/exam_result.html', context)
+        
+    except Exception as e:
+        logger.error(f"Exam result error: {str(e)}")
+        messages.error(request, 'Sınav sonuçları görüntülenirken bir hata oluştu.')
         return redirect('exam_list')
-    return render(request, 'exams/exam_result.html', {'submission': submission})
 
 @login_required
 def grade_exam(request, pk):
-    submission = get_object_or_404(Submission, pk=pk)
-    exam = submission.exam
-    submission_count = Submission.objects.filter(exam=exam).count()
+    exam = get_object_or_404(Exam, pk=pk)
+    submissions = Submission.objects.filter(exam=exam)
+    submission_count = submissions.count()
 
-    if not request.user.is_instructor or submission.exam.instructor != request.user:
+    if not request.user.is_instructor or exam.instructor != request.user:
+        messages.error(request, 'Bu sınava erişim yetkiniz bulunmamaktadır.')
         return redirect('exam_list')
 
     if request.method == 'POST':
         if 'finish_exam' in request.POST:
-            exam = submission.exam
             exam.is_active = False
             exam.save()
 
-            submissions = Submission.objects.filter(exam=exam)
-            for sub in submissions:
-                sub.is_graded = True
-                sub.save()
+            for submission in submissions:
+                if not submission.is_graded:
+                    correct_answers = 0
+                    total_questions = submission.exam.questions.count()
+                    
+                    for student_answer in submission.student_answers.all():
+                        if student_answer.answer and student_answer.answer.is_correct:
+                            correct_answers += 1
+                    
+                    if total_questions > 0:
+                        score = (correct_answers / total_questions) * 100
+                        submission.score = round(score, 2)
+                    
+                    submission.is_graded = True
+                    submission.is_submitted = True
+                    submission.end_time = timezone.now()
+                    submission.save()
 
-            messages.success(request, 'Exam has been marked as complete.')
+            messages.success(request, 'Sınav başarıyla tamamlandı ve notlandırıldı.')
             return redirect('exam_list')
 
-    return render(request, 'exams/grade_exam.html', {'submission': submission, 'submission_count': submission_count})
+    context = {
+        'exam': exam,
+        'submissions': submissions,
+        'submission_count': submission_count
+    }
+    return render(request, 'exams/grade_exam.html', context)

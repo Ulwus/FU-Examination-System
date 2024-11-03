@@ -1,38 +1,213 @@
 {% extends 'base_generic.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Giriş Yap{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title text-center mb-4">Login</h2>
-                    <form method="post" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            {{ form.username.label_tag }}
-                            {% render_field form.username class="form-control" %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.password.label_tag }}
-                            {% render_field form.password class="form-control" %}
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-secondary btn-success">Login</button>
-                        </div>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot your password?</a> | 
-                        <a href="{% url 'register' %}" class="text-decoration-none">Sign up</a>
+<div class="login-container">
+    <div class="login-card" data-aos="fade-up">
+        <div class="logo-section">
+            <i class="fas fa-graduation-cap"></i>
+            <h1 class="text-gradient">FU Examination</h1>
+        </div>
+
+        <div class="card-body">
+            <h2 class="welcome-text">Tekrar Hoş Geldiniz!</h2>
+            <p class="text-muted mb-4">Hesabınıza giriş yapın</p>
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        {% render_field form.username class="form-control" placeholder="Kullanıcı Adı" %}
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        {% render_field form.password class="form-control" placeholder="Şifre" %}
+                    </div>
+                </div>
+
+                <button type="submit" class="login-button">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Giriş Yap
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>veya</span>
+            </div>
+
+            <div class="auth-links">
+                <a href="" class="auth-link">
+                    <i class="fas fa-key me-2"></i>
+                    Şifremi Unuttum
+                </a>
+                <a href="{% url 'register' %}" class="auth-link">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Yeni Hesap Oluştur
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.login-container {
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.logo-section {
+    margin-bottom: 2rem;
+}
+
+.logo-section i {
+    font-size: 3rem;
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.welcome-text {
+    color: #2d3748;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+    border-color: #2b44ff;
+    box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
+}
+
+.input-group-text {
+    background: #f8faff;
+    border: none;
+    color: #2b44ff;
+    padding: 0.75rem 1rem;
+}
+
+.form-control {
+    border: none;
+    padding: 0.75rem;
+    box-shadow: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+}
+
+.login-button {
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 12px;
+    width: 100%;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(43, 68, 255, 0.3);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 2rem 0;
+    color: #718096;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.divider span {
+    padding: 0 1rem;
+}
+
+.auth-links {
+    display: grid;
+    gap: 1rem;
+}
+
+.auth-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    color: #2d3748;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.auth-link:hover {
+    border-color: #2b44ff;
+    background: rgba(43, 68, 255, 0.02);
+    color: #2b44ff;
+}
+
+@media (max-width: 768px) {
+    .login-card {
+        padding: 2rem;
+    }
+}
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

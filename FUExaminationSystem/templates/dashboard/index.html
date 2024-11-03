@@ -1,0 +1,647 @@
+{% extends 'base_generic.html' %}
+{% block content %}
+
+
+
+<style>
+
+.leaderboard-footer {
+    padding: 0.5rem;
+    background: #f8faff;
+    border-radius: 0 0 15px 15px;
+}
+
+.info-sections {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.info-section {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.info-section:hover {
+    transform: translateY(-5px);
+}
+
+.info-section i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-section h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.info-section p {
+    color: #718096;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .info-sections {
+        grid-template-columns: 1fr;
+    }
+}
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    color: #718096;
+}    
+.dashboard-container {
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.timeline-badge {
+    min-width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.timeline-badge i {
+    font-size: 1.2rem;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-content h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content p {
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content small {
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+.activity-score {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+}
+
+.competition-badge {
+    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+}
+
+.exam-badge {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+.leaderboard-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.leaderboard-header {
+    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+    padding: 1.5rem;
+    color: white;
+}
+
+.leaderboard-item {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.leaderboard-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.rank {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.username {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+}
+
+.stat-item i {
+    margin-right: 0.5rem;
+    color: #2b44ff;
+}
+
+.medal-count {
+    font-weight: bold;
+    color: #f1c40f;
+}    
+
+.upcoming-header {
+    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px 15px 0 0;
+}
+
+.upcoming-header h5 {
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.upcoming-list {
+    padding: 1rem;
+}
+
+.upcoming-item {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.upcoming-item:last-child {
+    border-bottom: none;
+}
+
+.upcoming-item:hover {
+    background: #f8faff;
+    transform: translateX(5px);
+}
+
+.upcoming-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upcoming-icon i {
+    font-size: 1rem;
+    color: #2b44ff;
+}
+
+.upcoming-content {
+    flex: 1;
+}
+
+.exam-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.exam-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.exam-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.countdown .badge {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #718096;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .exam-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .upcoming-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .upcoming-icon {
+        margin: 0 auto;
+    }
+    
+    .countdown {
+        margin-top: 1rem;
+    }
+}
+</style>
+
+<div class="dashboard-container">
+    <div class="hero-section mb-4">
+        <div class="container">
+            <h1 class="text-gradient">Hoş Geldin, {{ user.username }}!</h1>
+            <p class="lead">Performans özetini ve istatistiklerini görüntüle</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-trophy text-primary"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h6>Aktif Yarışmalar</h6>
+                        <h3>{{ stats.active_competitions }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-file-alt text-success"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h6>Aktif Sınavlar</h6>
+                        <h3>{{ stats.active_exams }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="fas fa-paper-plane text-info"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h6>Toplam Gönderi</h6>
+                        <h3>{{ stats.total_submissions }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-check-circle text-warning"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h6>Tamamlanan Sınavlar</h6>
+                        <h3>{{ stats.completed_exams }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Yarışma Performansı</h5>
+                                <canvas id="competitionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Sınav Performansı</h5>
+                                <canvas id="examChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center mb-4">
+                            <i class="fas fa-stream me-2 text-primary"></i>
+                            Son Aktiviteler
+                        </h5>
+                        <div class="timeline">
+                            {% for activity in activities %}
+                            <div class="timeline-item">
+                                <div class="timeline-badge {% if activity.type == 'competition' %}competition-badge{% else %}exam-badge{% endif %}">
+                                    <i class="fas {% if activity.type == 'competition' %}fa-code{% else %}fa-file-alt{% endif %} text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>{{ activity.title }}</h6>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="activity-score me-3">
+                                            <i class="fas fa-chart-line me-1"></i>
+                                            {{ activity.score|floatformat:4 }}
+                                        </span>
+                                        <small>
+                                            <i class="far fa-clock me-1"></i>
+                                            {{ activity.date|timesince }} önce
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                        <div class="upcoming-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Yaklaşan Sınavlar
+                            </h5>
+                        </div>
+                        
+                        <div class="upcoming-list">
+                            {% if upcoming_exams %}
+                                {% for exam in upcoming_exams %}
+                                <div class="upcoming-item">
+                                    <div class="upcoming-icon">
+                                        <i class="fas fa-book-open"></i>
+                                    </div>
+                                    <div class="upcoming-content">
+                                        <h6 class="exam-title">{{ exam.title }}</h6>
+                                        <div class="exam-info">
+                                            <span class="time">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ exam.start_time|date:"H:i" }}
+                                            </span>
+                                           
+                                            <span class="duration">
+                                                <i class="fas fa-hourglass-half me-1"></i>
+                                                {{ exam.duration }} dk
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="countdown">
+                                        <span class="badge">{{ exam.start_time|timeuntil }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p>Yaklaşan sınav bulunmuyor</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+
+                <div class="card leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-trophy me-2"></i>
+                            Liderlik Tablosu
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for user in leaderboard %}
+                        <div class="leaderboard-item">
+                            <div class="rank">#{{ forloop.counter }}</div>
+                            <div class="user-info">
+                                <div class="username">{{ user.username }}</div>
+                                <div class="stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-medal"></i>
+                                        <span class="medal-count">{{ user.first_places }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-chart-line"></i>
+                                        {{ user.avg_score|floatformat:4 }}
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-flag"></i>
+                                        {{ user.total_competitions }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="leaderboard-footer">
+                            <div class="info-sections">
+                                <div class="info-section">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <h6>Başarının Anahtarı</h6>
+                                    <p>Sürekli pratik ve öğrenme ile sıralamanızı yükseltin</p>
+                                </div>
+                                <div class="info-section">
+                                    <i class="fas fa-chart-line text-success"></i>
+                                    <h6>İlerleme</h6>
+                                    <p>Her yarışma deneyimi ile kendinizi geliştirin</p>
+                                </div>
+                                <div class="info-section">
+                                    <i class="fas fa-award text-primary"></i>
+                                    <h6>Rekabet</h6>
+                                    <p>Diğer öğrencilerle yarışarak motivasyonunuzu artırın</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const competitionCtx = document.getElementById('competitionChart').getContext('2d');
+    new Chart(competitionCtx, {
+        type: 'line',
+        data: {
+            labels: {{ competition_stats.submission_dates|safe }},
+            datasets: [{
+                label: 'F1 Score',
+                data: {{ competition_stats.f1_scores|safe }},
+                borderColor: '#2b44ff',
+                backgroundColor: 'rgba(43, 68, 255, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1
+                }
+            }
+        }
+    });
+
+
+    const examCtx = document.getElementById('examChart').getContext('2d');
+    new Chart(examCtx, {
+        type: 'line', 
+        data: {
+            labels: {{ exam_stats.submission_dates|safe }},
+            datasets: [{
+                label: 'Sınav Notu',
+                data: {{ exam_stats.scores|safe }},
+                borderColor: '#2ecc71', 
+                backgroundColor: '#2ECC7052',
+                tension: 0.4, 
+                fill: true 
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(1) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock content %}

@@ -1,40 +1,364 @@
 {% extends 'base_generic.html' %}
-
 {% load static %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}{{ user.username }} - Profil{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="my-4">My Profile</h2>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture.url }}" class="card-img-top rounded-circle" alt="Profile Picture">
-                {% else %}
-                    <img src="/media/default_profile.png" class="card-img-top rounded-circle " alt="Profile Picture">
-                {% endif %}
-                <div class="card-body text-center">
-                    <h4 class="card-title">{{ user.username }}</h4>
-                    <p class="card-text">{{ user.bio }}</p>
+<div class="profile-container">
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="profile-card" data-aos="fade-right">
+                    <div class="profile-image-wrapper">
+                        <div class="profile-image">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="Profil Fotoğrafı">
+                            {% else %}
+                                <img src="/media/default_profile.png" alt="Varsayılan Profil">
+                            {% endif %}
+                            <div class="profile-status online"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <h2>{{ user.get_full_name|default:user.username }}</h2>
+                        <span class="role-badge">
+                            {% if user.is_student %}
+                                <i class="fas fa-user-graduate"></i> Öğrenci
+                            {% elif user.is_instructor %}
+                                <i class="fas fa-chalkboard-teacher"></i> Eğitmen
+                            {% endif %}
+                        </span>
+                        
+                        <div class="activity-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-tasks"></i>
+                                <span>{{ exam_stats.total_exams }}</span>
+                                <small>Sınav</small>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>{{ competition_stats.participations }}</span>
+                                <small>Yarışma</small>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-medal"></i>
+                                <span>{{ competition_stats.first_places }}</span>
+                                <small>Birincilik</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-access-card mt-4" data-aos="fade-right" data-aos-delay="100">
+                    <h5><i class="fas fa-bolt"></i> Hızlı Erişim</h5>
+                    <div class="quick-links">
+                        <a href="{% url 'exam_list' %}" class="quick-link">
+                            <i class="fas fa-book"></i>
+                            <span>Sınavlar</span>
+                        </a>
+                        <a href="{% url 'competition_list' %}" class="quick-link">
+                            <i class="fas fa-trophy"></i>
+                            <span>Yarışmalar</span>
+                        </a>
+                        <a href="{% url 'edit_profile' %}" class="quick-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Ayarlar</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">User Information</h5>
-                    <p><strong>Username:</strong> {{ user.username }}</p>
-                    <p><strong>Email:</strong> {{ user.email }}</p>
-                    <p><strong>Role:</strong> 
-                        {% if user.is_student %}Student{% elif user.is_instructor %}Instructor{% elif user.is_admin %}Admin{% endif %}
-                    </p>
-                    <a href="{% url 'exam_list' %}" class="btn btn-custom">View My Exams</a>
-                    <a href="{% url 'edit_profile' %}" class="btn btn-secondary">Edit Profile</a>
+
+            <div class="col-lg-8">
+                <div class="performance-section" data-aos="fade-left">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Performans Özeti
+                    </h3>
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <div class="performance-header">
+                                <i class="fas fa-graduation-cap"></i>
+                                <h4>Sınav Performansı</h4>
+                            </div>
+                            <div class="performance-stats">
+                                <div class="stat">
+                                    <label>Ortalama Not</label>
+                                    <span class="text-success">{{ exam_stats.avg_score|floatformat:1 }}</span>
+                                </div>
+                                <div class="stat">
+                                    <label>En Yüksek Not</label>
+                                    <span class="text-primary">{{ exam_stats.highest_score|floatformat:1 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="performance-header">
+                                <i class="fas fa-award"></i>
+                                <h4>Yarışma Performansı</h4>
+                            </div>
+                            <div class="performance-stats">
+                                <div class="stat">
+                                    <label>Ortalama F1 Skoru</label>
+                                    <span class="text-success">{{ competition_stats.avg_f1_score|floatformat:3 }}</span>
+                                </div>
+                                <div class="stat">
+                                    <label>En İyi Sıralama</label>
+                                    <span class="text-primary">#{{ competition_stats.best_rank }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activities-section mt-4" data-aos="fade-left" data-aos-delay="100">
+                    <h3 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Son Aktiviteler
+                    </h3>
+                    <div class="timeline">
+                        {% for activity in activities %}
+                        <div class="timeline-item">
+                            <div class="timeline-badge {% if activity.type == 'competition' %}competition-badge{% else %}exam-badge{% endif %}">
+                                <i class="fas {% if activity.type == 'competition' %}fa-code{% else %}fa-file-alt{% endif %} text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>{{ activity.title }}</h6>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="activity-score me-3">
+                                        <i class="fas fa-chart-line me-1"></i>
+                                        {{ activity.score|floatformat:4 }}
+                                    </span>
+                                    <small>
+                                        <i class="far fa-clock me-1"></i>
+                                        {{ activity.date|timesince }} önce
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <p>Henüz bir aktivite bulunmuyor.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.profile-container {
+    min-height: 30vh;
+}
+
+.profile-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.profile-image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.profile-image img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #2b44ff;
+}
+
+.profile-status {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #2ecc71;
+    border: 2px solid white;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    margin: 1rem 0;
+}
+
+.activity-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    color: #2b44ff;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item span {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2d3748;
+}
+
+.quick-access-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.quick-link {
+    text-decoration: none;  /* Link alt çizgisini kaldır */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 12px;
+    color: #2d3748;
+    transition: all 0.3s ease;
+}
+
+.quick-link:hover {
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+    text-decoration: none;  /* Hover durumunda da alt çizgi olmasın */
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: #2d3748;
+}
+
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.performance-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.performance-card:hover {
+    transform: translateY(-5px);
+}
+
+.timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timeline-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.timeline-badge {
+    min-width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.competition-badge {
+    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+}
+
+.exam-badge {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-content h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.activity-score {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: rgba(43, 68, 255, 0.1);
+    color: #2b44ff;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #718096;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+@media (max-width: 992px) {
+    .profile-card {
+        margin-bottom: 2rem;
+    }
+    
+    .performance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

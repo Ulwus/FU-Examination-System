@@ -17,7 +17,7 @@ def finish_exam_task(submission_id):
     if submission.end_time is not None and submission.is_submitted:
         logger.info(f"Exam already finished for submission {submission_id}")
         return
-    
+
     exam = submission.exam
 
     temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
