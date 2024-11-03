@@ -243,12 +243,54 @@ Each page includes:
 <details>
   <summary><h2>Tech Stack</h2></summary>
 
-- **Backend:** Django, Django REST Framework
-- **Frontend:** Bootstrap 5, HTMX
-- **Database:** PostgreSQL
-- **Cache:** Redis
-- **ML Tools:** scikit-learn, pandas
-- **DevOps:** Docker, Docker Compose
+## Backend
+- **Framework:** Django 4.2+
+- **Python:** 3.8+
+- **Authentication:** Django Auth System
+- **Task Queue:** Celery
+- **Websocket:** Django Channels (IDE için)
+
+## Frontend 
+- **Framework:** Bootstrap 5.3
+- **JavaScript:** Vanilla JS
+- **Charts:** Chart.js
+- **Icons:** Font Awesome 5
+- **Animations:** AOS (Animate on Scroll)
+- **Code Editor:** Ace Editor
+- **Fonts:** Montserrat, Roboto
+
+## Database & Storage
+- **Primary Database:** MongoDB
+- **Cache & Message Broker:** Redis
+- **File Storage:** Local Media Storage
+
+## Machine Learning
+- **Libraries:**
+  - scikit-learn
+  - pandas
+  - joblib (model serialization)
+
+## DevOps & Infrastructure
+- **Containerization:** Docker
+- **Orchestration:** Docker Compose
+- **Web Server:** Gunicorn
+- **Environment:** python-dotenv
+
+## Security
+- **CSRF Protection:** Django Middleware
+- **Authentication:** Session-based
+- **Form Protection:** Django Forms
+- **File Upload Security:** Django File Validators
+
+## Monitoring & Logging
+- **Logging:** Django Logging
+- **Debug Tools:** Django Debug Toolbar
+- **Error Tracking:** Custom Error Pages (400, 401, 403, 404, 408, 429, 500, 502)
+
+## IDE Integration
+- **Code Execution:** Custom Python Runtime
+- **Editor:** Ace Editor Integration
+- **Syntax Highlighting:** Multiple Language Support
 
 </details>
 
