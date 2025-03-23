@@ -34,6 +34,7 @@ class CompetitionDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         competition = self.object
+        
 
         try:
             context['leaderboard'] = competition.get_leaderboard()
@@ -56,11 +57,19 @@ class CompetitionDetailView(LoginRequiredMixin, DetailView):
 
                 best_submission = submissions.order_by('-f1_score').first()
                 context['best_submission'] = best_submission
+                
 
             except Exception as e:
                     print("Katılım durumu kontrol edilirken hata: ", e)
                     context['is_participant'] = False
 
+            if best_submission:
+                    context['confusion_matrix'] = {
+                        'true_positives': best_submission.true_positives,
+                        'false_positives': best_submission.false_positives,
+                        'false_negatives': best_submission.false_negatives, 
+                        'true_negatives': best_submission.true_negatives
+                    }
         return context
 
 
@@ -142,6 +151,10 @@ def submit_model(request, competition_id):
                     accuracy=scores['accuracy'],
                     precision=scores['precision'],
                     recall=scores['recall'],
+                    true_positives=scores['confusion_matrix']['true_positives'],
+                    false_positives=scores['confusion_matrix']['false_positives'],
+                    false_negatives=scores['confusion_matrix']['false_negatives'],
+                    true_negatives=scores['confusion_matrix']['true_negatives'],
                     processing_status='completed'
                 )
                 messages.success(request, f'Modeliniz başarıyla değerlendirildi. F1 Skorunuz: {scores["f1_score"]:.4f}')

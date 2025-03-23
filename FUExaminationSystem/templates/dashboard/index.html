@@ -7,7 +7,7 @@
 
 .leaderboard-footer {
     padding: 0.5rem;
-    background: #f8faff;
+    background: var(--light-bg);
     border-radius: 0 0 15px 15px;
 }
 
@@ -35,13 +35,13 @@
 }
 
 .info-section h6 {
-    color: #2d3748;
+    color: var(--dark-text);
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
 .info-section p {
-    color: #718096;
+    color: var(--dark-text);
     font-size: 0.875rem;
     margin: 0;
 }
@@ -56,7 +56,7 @@
     flex-direction: column;
     align-items: center;
     padding: 1rem;
-    color: #718096;
+    color: var(--light-text);
 }    
 .dashboard-container {
     min-height: 100vh;
@@ -64,7 +64,7 @@
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -133,18 +133,18 @@
 }
 
 .timeline-content h6 {
-    color: #2d3748;
+    color: var(--dark-text);
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
 .timeline-content p {
-    color: #4a5568;
+    color: var(--light-text);
     margin-bottom: 0.5rem;
 }
 
 .timeline-content small {
-    color: #718096;
+    color: var(--light-text);
     font-size: 0.875rem;
 }
 
@@ -155,11 +155,11 @@
     font-weight: 600;
     font-size: 0.875rem;
     background: rgba(43, 68, 255, 0.1);
-    color: #2b44ff;
+    color: var(--primary-color);
 }
 
 .competition-badge {
-    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
 }
 
 .exam-badge {
@@ -172,7 +172,7 @@
 }
 
 .leaderboard-header {
-    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     padding: 1.5rem;
     color: white;
 }
@@ -184,12 +184,12 @@
     display: flex;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
     transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .leaderboard-item:hover {
-    background-color: #f8f9fa;
+    background-color: var(--light-bg);
     transform: translateX(5px);
 }
 
@@ -198,7 +198,7 @@
     height: 40px;
     border-radius: 10px;
     background: rgba(43, 68, 255, 0.1);
-    color: #2b44ff;
+    color: var(--primary-color);
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -212,7 +212,7 @@
 
 .username {
     font-weight: 600;
-    color: #2d3748;
+    color: var(--dark-text);
     margin-bottom: 0.25rem;
 }
 
@@ -220,7 +220,7 @@
     display: flex;
     gap: 1rem;
     font-size: 0.875rem;
-    color: #718096;
+    color: var(--light-text);
 }
 
 .stat-item {
@@ -230,16 +230,16 @@
 
 .stat-item i {
     margin-right: 0.5rem;
-    color: #2b44ff;
+    color: var(--primary-color);
 }
 
 .medal-count {
     font-weight: bold;
-    color: #f1c40f;
+    color: var(--warning-color);
 }    
 
 .upcoming-header {
-    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     padding: 1.5rem;
     border-radius: 15px 15px 0 0;
@@ -263,7 +263,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
@@ -272,7 +272,7 @@
 }
 
 .upcoming-item:hover {
-    background: #f8faff;
+    background: var(--light-bg);
     transform: translateX(5px);
 }
 
@@ -281,7 +281,7 @@
     height: 40px;
     border-radius: 10px;
     background: rgba(43, 68, 255, 0.1);
-    color: #2b44ff;
+    color: var(--primary-color);
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -290,7 +290,7 @@
 
 .upcoming-icon i {
     font-size: 1rem;
-    color: #2b44ff;
+    color: var(--primary-color);
 }
 
 .upcoming-content {
@@ -299,7 +299,7 @@
 
 .exam-title {
     font-weight: 600;
-    color: #2d3748;
+    color: var(--dark-text);
     margin-bottom: 0.5rem;
 }
 
@@ -307,7 +307,7 @@
     display: flex;
     gap: 1rem;
     font-size: 0.875rem;
-    color: #718096;
+    color: var(--light-text);
 }
 
 .exam-info span {
@@ -318,7 +318,7 @@
 
 .countdown .badge {
     background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
+    color: var(--success-color);
     font-weight: 600;
     padding: 0.5rem 1rem;
     border-radius: 20px;
@@ -327,7 +327,7 @@
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
-    color: #718096;
+    color: var(--light-text);
 }
 
 .empty-state i {
@@ -586,9 +586,10 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'F1 Score',
                 data: {{ competition_stats.f1_scores|safe }},
-                borderColor: '#2b44ff',
-                backgroundColor: 'rgba(43, 68, 255, 0.1)',
-                tension: 0.4
+                borderColor: '#8c0841', 
+                backgroundColor: '#AF195A98',
+                tension: 0.4,
+                fill: true 
             }]
         },
         options: {

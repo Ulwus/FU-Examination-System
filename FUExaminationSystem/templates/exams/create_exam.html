@@ -18,7 +18,7 @@
   }
   
   .text-gradient {
-      background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-weight: 700;
@@ -40,14 +40,14 @@
   
   .form-control {
       background: white;
-      border: 2px solid #e2e8f0;
+      border: 2px solid var(--border-color);
       border-radius: 12px;
       padding: 0.75rem;
       transition: all 0.3s ease;
   }
   
   .form-control:focus {
-      border-color: #2b44ff;
+      border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
       outline: none;
   }
@@ -59,7 +59,7 @@
   }
   
   .editor-container {
-      border: 2px solid #e2e8f0;
+      border: 2px solid var(--border-color);
       border-radius: 12px;
       overflow: hidden;
       margin-bottom: 1.5rem;
@@ -72,7 +72,7 @@
   }
   
   .submit-button {
-      background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
       color: white;
       border: none;
       padding: 1rem 2rem;

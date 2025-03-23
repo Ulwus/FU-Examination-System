@@ -5,6 +5,7 @@
 
 <div class="dashboard-container">
     <div class="container py-5">
+       
         <div id="ide-icon" class="position-fixed" style="top: 50%; right: -50px; transform: translateY(-50%); transition: right 0.3s; z-index: 1000;">
             <button class="btn btn-gradient" onclick="toggleIde()">
                 <img src="/media/ide.png" alt="IDE Icon" style="height: 50px;">
@@ -35,6 +36,10 @@
         <div class="text-center mb-5" data-aos="fade-down">
             <h1 class="text-gradient">{{ exam.title }}</h1>
             <div id="timer" class="timer-badge"></div>
+            <div class="attempts-badge">
+                <i class="fas fa-heart"></i>
+                Kalan Hak: {{ submission.attempts }}
+            </div>
         </div>
 
         <form id="exam-form" method="post" class="needs-validation" novalidate>
@@ -95,13 +100,26 @@
 </div>
 
 <style>
+
+
+.attempts-badge {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
 .dashboard-container {
     min-height: 100vh;
     padding: 2rem 0;
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
@@ -111,7 +129,7 @@
 .timer-badge {
     display: inline-block;
     padding: 0.5rem 1.5rem;
-    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border-radius: 50px;
     font-size: 1.2rem;
@@ -129,21 +147,21 @@
     box-shadow: -5px 0 15px rgba(0,0,0,0.1);
     transition: right 0.3s ease;
     z-index: 1000;
-    border-left: 3px solid #2ecc71;
+    border-left: 3px solid var(--primary-color);
 }
 
 .editor-container {
     height: 300px;
     border-radius: 12px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     overflow: hidden;
 }
 
 .output-container {
-    background: #f8faff;
+    background: var(--border-color);
     border-radius: 12px;
     padding: 1rem;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     max-height: 200px;
     overflow-y: auto;
 }
@@ -172,7 +190,7 @@
 .question-number {
     width: 40px;
     height: 40px;
-    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -183,7 +201,7 @@
 
 .question-text {
     font-size: 1.1rem;
-    color: #2d3748;
+    color: var(--dark-text);
     font-weight: 500;
     line-height: 1.6;
 }
@@ -194,7 +212,7 @@
 }
 
 .answers-section {
-    background: #f8faff;
+    background: var(--light-bg);
     border-radius: 12px;
     padding: 1.5rem;
 }
@@ -221,7 +239,7 @@
 }
 
 .custom-radio:hover {
-    border-color: #2ecc71;
+    border-color: var(--primary-color);
     background: rgba(46, 204, 113, 0.02);
 }
 
@@ -235,7 +253,7 @@
 }
 
 .submit-button {
-    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -256,7 +274,7 @@
 }
 
 .btn-gradient {
-    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     border-radius: 12px;
@@ -287,6 +305,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ace.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.0/ext-language_tools.min.js"></script>
 <script>
+    
     const examDuration = {{ exam.duration }} * 60; 
     const startTime = new Date('{{ submission.start_time|date:"c" }}').getTime();
     const endTime = startTime + (examDuration * 1000);
@@ -294,6 +313,32 @@
     let formSubmitted = false;
     let tempAnswers = JSON.parse('{{ answered_dict|safe }}');
     let hasChanges = false;
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: 'tab_change=true'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'redirect') {
+                    window.location.href = data.url;
+                } else {
+                    const attemptsBadge = document.querySelector('.attempts-badge');
+                    attemptsBadge.innerHTML = `<i class="fas fa-heart"></i> Kalan Hak: ${data.attempts}`;
+                    
+                    if (data.attempts <= 0) {
+                        submitExam();
+                    }
+                }
+            });
+        }
+    });
 
         function updateTempAnswers(questionId, answerId) {
         tempAnswers[questionId] = answerId;
@@ -347,23 +392,61 @@
         }
     }
 
+    let remainingSeconds = {{ submission.get_remaining_time }}; // Sunucudan başlangıç süresini al
+    let timerInterval;
+    
     function updateTimer() {
-        const now = new Date().getTime();
-        const distance = endTime - now;
-
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        document.getElementById("timer").innerHTML = `Time remaining: ${hours}h ${minutes}m ${seconds}s`;
-
-        if (distance < 0) {
+        if (remainingSeconds <= 0) {
             clearInterval(timerInterval);
-            document.getElementById("timer").innerHTML = "EXPIRED";
             submitExam();
+            return;
         }
+    
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+        const seconds = remainingSeconds % 60;
+    
+        document.getElementById("timer").innerHTML = 
+            `Kalan Süre: ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        remainingSeconds--;
     }
-
+    
+    function checkTimeFromServer() {
+        fetch('', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'save_temp_answers=true&temp_answers=' + JSON.stringify(tempAnswers)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                remainingSeconds = data.remaining_time; // Sunucu süresini güncelle
+            } else if (data.status === 'redirect') {
+                window.location.href = data.url;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    // Her saniye timer'ı güncelle
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    // Her 30 saniyede bir sunucu ile senkronize et
+    const serverSyncInterval = setInterval(checkTimeFromServer, 30000);
+    
+    // Sayfa yüklendiğinde ilk timer'ı başlat
+    updateTimer();
+    checkTimeFromServer();
+    
+    // Sayfa kapanırken interval'leri temizle
+    window.addEventListener('beforeunload', function() {
+        clearInterval(timerInterval);
+        clearInterval(serverSyncInterval);
+    });
     document.querySelectorAll('input[type="radio"]').forEach(radio => {
         radio.addEventListener('change', function() {
             updateTempAnswers(this.name.split('_')[1], this.value);
@@ -384,8 +467,6 @@
         submitExam();
     });
 
-    updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
 
 
 

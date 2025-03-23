@@ -78,7 +78,7 @@
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
@@ -99,11 +99,11 @@
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 2rem;
-    border: 4px solid #2b44ff;
+    border: 4px solid var(--primary-color);
 }
 
 .image-upload label {
-    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     padding: 1rem 2rem;
     border-radius: 50px;
@@ -136,7 +136,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #2d3748;
+    color: var(--dark-text);
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
@@ -149,13 +149,13 @@
 }
 
 .form-control:focus {
-    border-color: #2b44ff;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.2);
     outline: none;
 }
 
 .save-button {
-    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     padding: 1rem 2rem;

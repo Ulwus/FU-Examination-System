@@ -131,6 +131,12 @@ class CompetitionParticipant(models.Model):
         ).order_by('-f1_score').first()
 
 class CompetitionSubmission(models.Model):
+
+    true_positives = models.IntegerField(default=0)
+    false_positives = models.IntegerField(default=0)
+    false_negatives = models.IntegerField(default=0) 
+    true_negatives = models.IntegerField(default=0)
+
     competition = models.ForeignKey(
         Competition, 
         on_delete=models.CASCADE,

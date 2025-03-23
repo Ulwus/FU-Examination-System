@@ -11,9 +11,9 @@ class Exam(models.Model):
     description = models.TextField(blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    duration = models.IntegerField(default=60)
-    total_marks = models.PositiveIntegerField(default=100)
-    passing_marks = models.PositiveIntegerField(default=50)
+    duration = models.IntegerField(default=30)
+    total_marks = models.PositiveIntegerField(default=10)
+    passing_marks = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,11 +61,32 @@ class Submission(models.Model):
     score = models.FloatField(default=0)
     is_graded = models.BooleanField(default=False)
     is_submitted = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=3)  
 
     class Meta:
         ordering = ['-start_time']
         verbose_name = "Sınav Gönderimi"
         verbose_name_plural = "Sınav Gönderimleri"
+
+    def is_time_expired(self):
+        """Sınav süresinin dolup dolmadığını kontrol et"""
+        if not self.start_time:
+            return False
+        
+        duration = self.exam.duration
+        end_time = self.start_time + timezone.timedelta(minutes=duration)
+        return timezone.now() > end_time
+    
+    def get_remaining_time(self):
+        """Kalan süreyi saniye cinsinden döndür"""
+        if not self.start_time:
+            return 0
+            
+        duration = self.exam.duration
+        end_time = self.start_time + timezone.timedelta(minutes=duration)
+        remaining = end_time - timezone.now()
+        
+        return max(0, int(remaining.total_seconds()))
 
 class StudentAnswer(models.Model):
     submission = models.ForeignKey(Submission, related_name='student_answers', on_delete=models.CASCADE)

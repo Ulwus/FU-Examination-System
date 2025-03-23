@@ -147,7 +147,7 @@
 }
 
 .result-header {
-    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     padding: 2rem;
     text-align: center;
@@ -188,7 +188,7 @@
 .info-item {
     text-align: center;
     padding: 1.5rem;
-    background: #f8faff;
+    background: var(--light-bg);
     border-radius: 15px;
     transition: all 0.3s ease;
 }
@@ -200,7 +200,7 @@
 
 .info-item i {
     font-size: 2rem;
-    color: #2b44ff;
+    color: var(--primary-color);
     margin-bottom: 0.5rem;
 }
 
@@ -216,7 +216,7 @@
 }
 
 .answers-section h3 {
-    color: #2d3748;
+    color: var(--dark-text);
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
@@ -336,12 +336,12 @@
 }
 
 .result-body::-webkit-scrollbar-thumb {
-    background: #2b44ff;
+    background: var(--primary-color);
     border-radius: 4px;
 }
 
 .result-body::-webkit-scrollbar-thumb:hover {
-    background: #3366ff;
+    background: var(--secondary-color);
 }
 </style>
 {% endblock %}

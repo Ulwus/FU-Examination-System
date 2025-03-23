@@ -2,6 +2,8 @@ from django import forms
 from .models import Competition
 import pandas as pd
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+
 
 class CompetitionForm(forms.ModelForm):
     class Meta:
@@ -61,7 +63,8 @@ class ModelSubmissionForm(forms.Form):
     model_file = forms.FileField(
         required=True,
         label='Model Dosyası (.pkl)',
-        help_text='Eğitilmiş modelinizi .pkl formatında yükleyin.'
+        help_text='Eğitilmiş modelinizi .pkl formatında yükleyin.',
+        validators=[FileExtensionValidator(allowed_extensions=['pkl'])]
     )
 
 class JoinCompetitionForm(forms.Form):

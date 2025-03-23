@@ -34,7 +34,7 @@
 }
 
 .kahoot-card-header h1 {
-    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 2.5rem;
@@ -57,7 +57,7 @@
 }
 
 .info-item i {
-    color: #2b44ff;
+    color: var(--primary-color);
     font-size: 1.2rem;
     margin-right: 0.5rem;
 }
@@ -78,7 +78,7 @@
 
 .pin-input {
     background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     font-size: 1.5rem;
     font-weight: 600;
@@ -91,13 +91,13 @@
 }
 
 .pin-input:focus {
-    border-color: #2b44ff;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
     outline: none;
 }
 
 .join-btn {
-    background: linear-gradient(45deg, #2b44ff, #3366ff);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -127,7 +127,7 @@
 .help-section {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-color);
 }
 
 .help-section h4 {
@@ -149,7 +149,7 @@
 }
 
 .step-number {
-    background: #2b44ff;
+    background: var(--primary-color);
     color: white;
     width: 24px;
     height: 24px;

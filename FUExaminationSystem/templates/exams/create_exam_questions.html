@@ -114,7 +114,7 @@
 }
 
 .text-gradient {
-  background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
@@ -145,7 +145,7 @@
 .question-number {
   width: 40px;
   height: 40px;
-  background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -163,7 +163,7 @@
 }
 
 .image-upload-container {
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed var(--border-color);
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
@@ -172,7 +172,7 @@
 }
 
 .image-upload-container:hover {
-  border-color: #2b44ff;
+  border-color: var(--primary-color);
   background: rgba(43, 68, 255, 0.02);
 }
 
@@ -187,7 +187,7 @@
 
 .image-upload-label i {
   font-size: 2rem;
-  color: #2b44ff;
+  color: var(--primary-color);
 }
 
 .image-preview {
@@ -203,7 +203,7 @@
 }
 
 .answers-section {
-  background: #f8faff;
+  background: var(--light-bg);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -230,7 +230,7 @@
 }
 
 .input-group-text {
-  background: #f8faff;
+  background: var(--light-bg);
   border: none;
   padding: 0.75rem 1rem;
 }
@@ -245,7 +245,7 @@
 }
 
 .submit-button {
-  background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
   color: white;
   border: none;
   padding: 1rem 2rem;

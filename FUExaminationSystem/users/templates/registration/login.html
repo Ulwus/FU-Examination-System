@@ -15,6 +15,7 @@
             <h2 class="welcome-text">Tekrar Hoş Geldiniz!</h2>
             <p class="text-muted mb-4">Hesabınıza giriş yapın</p>
 
+
             <form method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <div class="form-group">
@@ -54,14 +55,30 @@
                     <i class="fas fa-user-plus me-2"></i>
                     Yeni Hesap Oluştur
                 </a>
+
             </div>
+
         </div>
+        <p class="text-muted" style="
+        font-size: small;
+        margin-top: auto;
+        padding: 1rem;
+        text-align: center;
+    ">
+        <a href="https://www.linkedin.com/in/ulwus" 
+           target="_blank"
+           style="text-decoration:none; color:var(--primary-color)">
+            Oğuzhan Gündüz
+        </a> 
+        Tarafından Yapıldı.
+    </p>
     </div>
+    
 </div>
 
 <style>
 .login-container {
-    min-height: 75vh;
+    min-height: 70vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -83,14 +100,14 @@
 
 .logo-section i {
     font-size: 3rem;
-    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 1rem;
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
@@ -99,7 +116,7 @@
 }
 
 .welcome-text {
-    color: #2d3748;
+    color: var(--dark-text);
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
@@ -111,21 +128,21 @@
 
 .input-group {
     background: white;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
     transition: all 0.3s ease;
 }
 
 .input-group:focus-within {
-    border-color: #2b44ff;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(43, 68, 255, 0.1);
 }
 
 .input-group-text {
-    background: #f8faff;
+    background: var(--light-bg);
     border: none;
-    color: #2b44ff;
+    color: var(--primary-color);
     padding: 0.75rem 1rem;
 }
 
@@ -140,7 +157,7 @@
 }
 
 .login-button {
-    background: linear-gradient(45deg, #2b44ff, #3f7ef8);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     padding: 1rem;
@@ -164,14 +181,14 @@
     align-items: center;
     text-align: center;
     margin: 2rem 0;
-    color: #718096;
+    color: var(--light-text);
 }
 
 .divider::before,
 .divider::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .divider span {
@@ -189,7 +206,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem;
-    border: 2px solid #e2e8f0;
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     color: #2d3748;
     text-decoration: none;
@@ -197,9 +214,9 @@
 }
 
 .auth-link:hover {
-    border-color: #2b44ff;
+    border-color: var(--primary-color);
     background: rgba(43, 68, 255, 0.02);
-    color: #2b44ff;
+    color: var(--secondary-color);
 }
 
 @media (max-width: 768px) {

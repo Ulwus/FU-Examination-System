@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 import json
+import time
 from django.contrib import messages
 from django.forms import formset_factory
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from django.utils import timezone
 from .models import Answer, Exam, Submission, StudentAnswer, TempSubmission, Question
 from .forms import ExamForm, QuestionForm, AnswerForm
@@ -133,102 +135,179 @@ def create_exam_questions(request, pk):
 @login_required
 def take_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)
-    completed_exams = Submission.objects.filter(user=request.user, end_time__isnull=False).values_list('exam_id', flat=True)
+    
+    # Tamamlanmış sınavları kontrol et
+    completed_exams = Submission.objects.filter(
+        user=request.user, 
+        end_time__isnull=False
+    ).values_list('exam_id', flat=True)
+
+    # Sınav başlamadıysa yönlendir
     if exam.start_time > timezone.now():
         messages.warning(request, 'Sınav henüz başlamamıştır!')
         return redirect('exam_list')
-    if exam.id in completed_exams:
-        submission = Submission.objects.get(exam=exam, user=request.user)
-        return redirect('exam_result', pk=submission.pk)
 
+    # Sınav zaten tamamlandıysa sonuç sayfasına yönlendir 
+    if exam.id in completed_exams:
+        return redirect('exam_result', pk=exam.pk)
+
+    # Yetki kontrolü
     if not request.user.is_student or not exam.is_active:
         return redirect('exam_list')
 
+    # Submission oluştur veya mevcut olanı al
     submission, created = Submission.objects.get_or_create(
         exam=exam,
         user=request.user,
-        defaults={'start_time': timezone.now()}
+        defaults={
+            'start_time': timezone.now(),
+            'attempts': 4
+        }
     )
 
+    # Deneme hakkı kalmadıysa sınavı bitir
+    if submission.attempts <= 0:
+        finish_exam_task.delay(submission.id)
+        messages.warning(request, 'Deneme haklarınız tükendiği için sınavınız otomatik olarak gönderildi.')
+        time.sleep(2)
+        return redirect('exam_result', pk=exam.pk)
+
+    # Süre kontrolü
+    if submission.is_time_expired():
+        finish_exam_task.delay(submission.id)
+        messages.warning(request, 'Sınav süresi dolduğu için sınavınız otomatik olarak gönderildi.')
+        time.sleep(2)
+        return redirect('exam_result', pk=exam.pk)
+
+    # Yeni submission ise bitiş zamanı ayarla
     if created:
         finish_time = timezone.now() + timedelta(minutes=exam.duration)
         finish_exam_task.apply_async((submission.id,), eta=finish_time)
 
+    # Soruları prefetch ile çek
     questions = exam.questions.all().prefetch_related('answers')
-    total_questions = questions.count()
 
+    # POST isteklerini işle
     if request.method == 'POST':
+        # Sınav zaten gönderildiyse hata döndür
         if submission.is_submitted:
             return JsonResponse({'status': 'already_submitted'}, status=400)
-        
+
+        # Tab değiştirme kontrolü  
+        if 'tab_change' in request.POST:
+            submission.attempts -= 1
+            submission.save()
+            
+            if submission.attempts <= 0:
+                finish_exam_task.delay(submission.id)
+                time.sleep(1)
+                return JsonResponse({
+                    'status': 'redirect',
+                    'url': reverse('exam_result', kwargs={'pk': exam.pk})
+                })
+            
+            return JsonResponse({
+                'status': 'success',
+                'attempts': submission.attempts
+            })
+
+        # Süre kontrolü yap
+        if submission.is_time_expired():
+            finish_exam_task.delay(submission.id)
+            time.sleep(1)
+            return JsonResponse({
+                'status': 'redirect', 
+                'url': reverse('exam_result', kwargs={'pk': exam.pk}),
+                'message': 'Sınav süresi doldu!'
+            })
+
+        # Sınavı bitirme isteği
         if 'finish_exam' in request.POST:
             finish_exam_task.delay(submission.id)
-            return redirect('exam_result', submission_id=submission.id)
+            time.sleep(1)
+            return redirect('exam_result', pk=exam.pk)
 
+        # Geçici cevapları kaydetme
         if 'save_temp_answers' in request.POST:
             try:
                 temp_answers = json.loads(request.POST.get('temp_answers', '{}'))
-
+                
+                # Önceki geçici cevapları sil
                 TempSubmission.objects.filter(submission=submission).delete()
-
-                temp_submission = TempSubmission(submission=submission, temp_answers=temp_answers)
+                
+                # Yeni geçici cevapları kaydet
+                temp_submission = TempSubmission(
+                    submission=submission, 
+                    temp_answers=temp_answers
+                )
                 temp_submission.save()
-
-                return JsonResponse({'status': 'success'})
-            except json.JSONDecodeError as e:
-                return JsonResponse({'status': 'error', 'message': 'Invalid JSON format.'}, status=400)
-            except ObjectDoesNotExist as e:
-                return JsonResponse({'status': 'error', 'message': 'Submission not found.'}, status=404)
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'remaining_time': submission.get_remaining_time()
+                })
+                
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Geçersiz JSON formatı.'
+                }, status=400)
+                
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Gönderi bulunamadı.'
+                }, status=404)
+                
             except Exception as e:
-                return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': str(e)
+                }, status=500)
 
-        if timezone.now() > submission.start_time + timezone.timedelta(minutes=exam.duration) or 'finish_exam' in request.POST:
-            finish_exam_task.delay(submission.id)
-            return redirect('exam_result', pk=submission.pk)
-
-    temp_submission = TempSubmission.objects.filter(submission=submission).order_by('-last_updated').first()
+    # Geçici cevapları getir
+    temp_submission = TempSubmission.objects.filter(
+        submission=submission
+    ).order_by('-last_updated').first()
+    
     answered_dict = temp_submission.temp_answers if temp_submission else {}
+
+    # IDE için değişkenleri ayarla  
     predefined_vars = exam.predefined_vars if exam.predefined_vars else ''
     request.session['predefined_vars'] = predefined_vars
 
-
-
-    return render(request, 'exams/take_exam.html', {
+    context = {
         'exam': exam,
         'submission': submission,
         'questions': questions,
         'answered_dict': json.dumps(answered_dict),
         'csrf_token': get_token(request),
         'predefined_vars': predefined_vars,
+        'remaining_time': submission.get_remaining_time()
+    }
 
-
-    })
+    return render(request, 'exams/take_exam.html', context)
 
 
 @login_required
 def exam_result(request, pk):
-    """
-    Sınav sonuçlarını görüntülemek için view fonksiyonu.
-    Öğrenciler kendi sonuçlarını, öğretmenler tüm sonuçları görebilir.
-    """
     try:
         exam = get_object_or_404(Exam, pk=pk)
         
-        submissions = Submission.objects.all()
-        user_submission = None
+        submission = Submission.objects.filter(
+            exam=exam,
+            user=request.user,
+            is_submitted=True
+        ).order_by('-end_time').first()
         
-        for sub in submissions:
-            if sub.exam == exam and sub.user == request.user and sub.is_submitted:
-                user_submission = sub
-                break
-        
-        if not user_submission:
+        if not submission:
             messages.error(request, 'Bu sınava ait sonucunuz bulunmamaktadır.')
             return redirect('exam_list')
             
         context = {
-            'submission': user_submission,
-            'exam': exam
+            'submission': submission,
+            'exam': exam,
+            'all_submissions': Submission.objects.filter(exam=exam).order_by('-end_time')
         }
 
         return render(request, 'exams/exam_result.html', context)
@@ -237,7 +316,6 @@ def exam_result(request, pk):
         logger.error(f"Exam result error: {str(e)}")
         messages.error(request, 'Sınav sonuçları görüntülenirken bir hata oluştu.')
         return redirect('exam_list')
-
 @login_required
 def grade_exam(request, pk):
     exam = get_object_or_404(Exam, pk=pk)

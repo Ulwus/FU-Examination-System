@@ -6,94 +6,140 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Max, Avg, Sum, F
+from django.views.decorators.cache import cache_page
+
+
 
 @login_required
 def dashboard(request):
+    """Ana dashboard view'ı"""
     user = request.user
-    context = {
-        'stats': get_user_stats(user),
-        'competition_stats': get_competition_stats(user),
-        'exam_stats': get_exam_stats(user),
-        'activities': get_recent_activities(user),
-        'upcoming_exams': get_upcoming_exams(),
-        'leaderboard': get_leaderboard()
+    
+    # Tüm verileri tek seferde çek
+    cached_data = {
+        'competitions': Competition.objects.all(),
+        'exams': Exam.objects.all(),
+        'competition_submissions': (CompetitionSubmission.objects
+                                 .select_related('competition', 'participant')
+                                 .all()),
+        'exam_submissions': (Submission.objects
+                          .select_related('exam', 'user')
+                          .all())
     }
+    
+    # Kullanıcıya özel verileri filtrele
+    user_data = {
+        'competition_submissions': [s for s in cached_data['competition_submissions'] 
+                                  if s.participant == user],
+        'exam_submissions': [s for s in cached_data['exam_submissions'] 
+                           if s.user == user]
+    }
+    
+    context = {
+        'stats': get_user_stats(cached_data, user),
+        'competition_stats': get_competition_stats(user_data['competition_submissions']),
+        'exam_stats': get_exam_stats(user_data['exam_submissions']),
+        'activities': get_recent_activities(user_data),
+        'upcoming_exams': get_upcoming_exams(cached_data['exams']),
+        'leaderboard': get_leaderboard(cached_data['competition_submissions'])
+    }
+    
     return render(request, 'dashboard/index.html', context)
 
-def get_user_stats(user):
-    all_competitions = Competition.objects.all()
-    all_exams = Exam.objects.all()
-    all_submissions = CompetitionSubmission.objects.all()
-    all_exam_submissions = Submission.objects.all()
-
-    return {
-        'active_competitions': len([c for c in all_competitions if c.is_active]),
-        'active_exams': len([e for e in all_exams if e.is_active]),
-        'total_submissions': len([s for s in all_submissions if s.participant == user]),
-        'completed_exams': len([s for s in all_exam_submissions if s.user == user and s.is_graded]),
-        'upcoming_exams': len([e for e in all_exams if e.start_time > timezone.now()]),
-    }
-
-def get_competition_stats(user):
-    all_submissions = CompetitionSubmission.objects.all()
-    user_submissions = [s for s in all_submissions if s.participant == user and s.processing_status == 'completed']
-    
-    if not user_submissions:
-        return {
-            'best_score': 0,
-            'avg_score': 0,
-            'submission_dates': [],
-            'f1_scores': [],
-            'recent_submissions': []
-        }
-    
-    sorted_submissions = sorted(user_submissions, key=lambda x: x.submitted_at, reverse=True)
-    scores = [s.f1_score for s in user_submissions]
+def get_user_stats(cached_data, user):
+    """Kullanıcı istatistiklerini hesapla"""
+    active_competitions = len([c for c in cached_data['competitions'] if c.is_active])
+    active_exams = len([e for e in cached_data['exams'] if e.is_active])
+    upcoming_exams = len([e for e in cached_data['exams'] 
+                         if e.start_time > timezone.now()])
     
     return {
-        'best_score': max(scores),
-        'avg_score': sum(scores) / len(scores),
-        'submission_dates': [s.submitted_at.strftime('%d/%m') for s in sorted_submissions],
-        'f1_scores': [s.f1_score for s in sorted_submissions],
-        'recent_submissions': sorted_submissions[:5]
+        'active_competitions': active_competitions,
+        'active_exams': active_exams,
+        'total_submissions': len([s for s in cached_data['competition_submissions'] 
+                                if s.participant == user]),
+        'completed_exams': len([s for s in cached_data['exam_submissions'] 
+                              if s.user == user and s.is_graded]),
+        'upcoming_exams': upcoming_exams
     }
 
-def get_exam_stats(user):
-    all_submissions = Submission.objects.all()
-    user_submissions = [s for s in all_submissions if s.user == user and s.is_graded]
+def get_competition_stats(user_submissions):
+    """Yarışma istatistiklerini hesapla"""
+    completed_submissions = [s for s in user_submissions 
+                           if s.processing_status == 'completed']
     
-    if not user_submissions:
+    if not completed_submissions:
         return {
-            'avg_score': 0,
             'best_score': 0,
-            'total_time': timezone.timedelta(0),
-            'submission_dates': [],
-            'scores': [],
+            'submission_dates': '[]',  # JSON formatında boş liste
+            'f1_scores': '[]',        # JSON formatında boş liste
             'recent_submissions': []
         }
-    
-    sorted_submissions = sorted(user_submissions, key=lambda x: x.end_time, reverse=True)
-    scores = [s.score for s in user_submissions]
-    total_time = sum(
-        [(s.end_time - s.start_time) for s in user_submissions],
-        timezone.timedelta(0)
+        
+    submission_data = sorted(
+        [(s.submitted_at.strftime('%Y-%m-%d'), s.f1_score) 
+         for s in completed_submissions 
+         if s.f1_score is not None],
+        key=lambda x: x[0]
     )
     
+    dates, scores = zip(*submission_data) if submission_data else ([], [])
+    
     return {
-        'avg_score': sum(scores) / len(scores),
-        'best_score': max(scores),
-        'total_time': total_time,
-        'submission_dates': [s.end_time.strftime('%d/%m') for s in sorted_submissions],
-        'scores': [s.score for s in sorted_submissions],
-        'recent_submissions': sorted_submissions[:5]
+        'best_score': max(scores, default=0),
+        'submission_dates': list(dates),  # Tarihleri liste olarak gönder
+        'f1_scores': list(scores),        # Skorları liste olarak gönder
+        'recent_submissions': sorted(completed_submissions, 
+                                  key=lambda x: x.submitted_at,
+                                  reverse=True)[:5]
     }
 
-def get_recent_activities(user):
+def get_exam_stats(user_submissions):
+    """Sınav istatistiklerini hesapla"""
+    # Sadece notlandırılmış sınavları al
+    graded_submissions = [s for s in user_submissions 
+                         if s.is_graded and s.score is not None]
+    
+    if not graded_submissions:
+        return {
+            'submission_dates': [],  # Boş liste
+            'scores': [],           # Boş liste
+            'avg_score': 0
+        }
+    
+    # Her sınav için en yüksek notu al
+    exam_best_scores = {}
+    for submission in graded_submissions:
+        exam_id = submission.exam.id
+        if exam_id not in exam_best_scores or submission.score > exam_best_scores[exam_id]['score']:
+            exam_best_scores[exam_id] = {
+                'date': submission.end_time.strftime('%Y-%m-%d'),
+                'score': submission.score
+            }
+    
+    # Tarihe göre sırala
+    submission_data = sorted(
+        [(data['date'], data['score']) 
+         for data in exam_best_scores.values()],
+        key=lambda x: x[0]
+    )
+    
+    dates, scores = zip(*submission_data) if submission_data else ([], [])
+    
+    return {
+        'submission_dates': list(dates),
+        'scores': list(scores),
+        'avg_score': sum(scores)/len(scores) if scores else 0
+    }
+
+
+
+def get_recent_activities(user_data):
     activities = []
     
-    all_comp_subs = CompetitionSubmission.objects.all()
+    all_comp_subs = user_data['competition_submissions']
     user_comp_subs = sorted(
-        [s for s in all_comp_subs if s.participant == user],
+        [s for s in all_comp_subs],
         key=lambda x: x.submitted_at,
         reverse=True
     )[:5]
@@ -107,9 +153,9 @@ def get_recent_activities(user):
                 'date': sub.submitted_at
             })
     
-    all_exam_subs = Submission.objects.all()
+    all_exam_subs = user_data['exam_submissions']
     user_exam_subs = sorted(
-        [s for s in all_exam_subs if s.user == user and s.end_time is not None], 
+        [s for s in all_exam_subs if s.end_time is not None], 
         key=lambda x: x.end_time,
         reverse=True
     )[:5]
@@ -128,18 +174,16 @@ def get_recent_activities(user):
         reverse=True
     )[:5]
 
-def get_upcoming_exams():
+
+def get_upcoming_exams(exams):
     """Yaklaşan sınavları getir"""
-    all_exams = Exam.objects.all()
-    upcoming = [
-        e for e in all_exams 
-        if e.start_time > timezone.now()
-    ]
+    now = timezone.now()
+    upcoming = [e for e in exams if e.start_time > now]
     return sorted(upcoming, key=lambda x: x.start_time)[:5]
 
-def get_leaderboard():
+def get_leaderboard(submissions):
     """Global liderlik tablosunu getir"""
-    all_submissions = CompetitionSubmission.objects.all()
+    all_submissions = submissions
     user_scores = {}
     
     for sub in all_submissions:
@@ -161,6 +205,7 @@ def get_leaderboard():
                 'avg_score': 0
             }
         
+        # Her yarışma için en iyi skoru ve gönderim zamanını güncelle
         if competition_id not in user_scores[username]['best_scores']:
             user_scores[username]['best_scores'][competition_id] = score
             user_scores[username]['submission_times'][competition_id] = submission_time
@@ -174,6 +219,7 @@ def get_leaderboard():
             
         user_scores[username]['total_competitions'].add(competition_id)
     
+    # Her yarışmanın birincisini belirle
     for competition_id in set(s.competition.id for s in all_submissions):
         comp_submissions = [(
             username, 
@@ -183,23 +229,30 @@ def get_leaderboard():
         if competition_id in data['best_scores']]
         
         if comp_submissions:
+            # Eşit skorlarda erken gönderen kazansın
             winner = sorted(
                 comp_submissions,
-                key=lambda x: (-x[1], x[2])  
+                key=lambda x: (-x[1], x[2])  # Skor yüksek, zaman küçük olsun
             )[0][0]
             
             if winner in user_scores:
                 user_scores[winner]['first_places'] += 1
     
+    # Ortalama skorları hesapla
     for username, data in user_scores.items():
         total_score = sum(data['best_scores'].values())
         num_competitions = len(data['best_scores'])
         data['avg_score'] = total_score / num_competitions if num_competitions > 0 else 0
         data['total_competitions'] = len(data['total_competitions'])
+        
+        # Gereksiz verileri temizle
+        data.pop('best_scores')
+        data.pop('submission_times')
     
+    # Önce birincilik sayısı, sonra ortalama skor
     sorted_users = sorted(
         user_scores.values(),
         key=lambda x: (-x['first_places'], -x['avg_score'])
     )
     
-    return sorted_users[:10]  
+    return sorted_users[:10]

@@ -8,7 +8,7 @@
 }
 
 .text-gradient {
-    background: linear-gradient(45deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 700;
@@ -37,7 +37,7 @@
 }
 
 .badge.bg-success {
-    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color))
 }
 
 .badge.bg-secondary {
@@ -64,7 +64,7 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #2b44ff 0%, #3f7ef8 100%);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 12px;
@@ -80,11 +80,11 @@
 h4 {
     font-weight: 700;
     margin-bottom: 1rem;
-    color: #2d3748;
+    color: var(--dark-text);
 }
 
 .text-muted {
-    color: #718096 !important;
+    color: var(--light-text) !important;
 }
 
 [data-aos] {
